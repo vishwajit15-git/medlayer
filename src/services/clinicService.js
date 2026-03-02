@@ -28,7 +28,7 @@ const registerClinic = async (data) => {
         const user = await User.create(
             [{
                 email,
-                password: hashedPassword,
+                passwordHash: hashedPassword,
                 clinicId: clinic[0]._id,
                 role: "admin"
             }],

@@ -1,9 +1,11 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const patientSchema=new mongoose.Schema({
     name:{
         type:String,
-        required:true
+        required:true,
+        trim:true
     },
     age:{
         type:Number
@@ -12,6 +14,10 @@ const patientSchema=new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:"Clinic",
         required:true
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 },{timestamps:true});
 

@@ -4,7 +4,8 @@ const createDoctor = async (req, res) => {
     const doctor = await doctorService.createDoctor(req.body, req.user);
 
     return res.status(201).json({
-        message: "Doctor created successfully"
+        message: "Doctor created successfully",
+        doctor
     });
 };
 
