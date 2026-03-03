@@ -18,6 +18,14 @@ const doctorSchema=new mongoose.Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    availability:{
+        startTime:{
+            type:String
+        },
+        endTime:{
+            type:String
+        }
     }
 },{timestamps:true});
 

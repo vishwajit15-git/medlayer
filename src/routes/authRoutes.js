@@ -118,6 +118,12 @@ router.delete(
         wrapAsync(appointmentController.createAppointment)
     );
 
+    //Get all available slots
+    router.get("/doctors/:id/available-slots",
+        authMiddleware,
+        wrapAsync(appointmentController.getAvailableSlots)
+    );
+
 // router.get("/profile",authMiddleware,(req,res)=>{
 //     return res.status(200).json({
 //         message:"Profile accessed",

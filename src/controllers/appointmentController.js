@@ -12,4 +12,17 @@ const createAppointment = async (req, res) => {
   });
 };
 
-module.exports =  {createAppointment};
+const getAvailableSlots = async (req, res) => {
+  const { id } = req.params;
+  const { date } = req.query;
+
+  const result = await appointmentService.getAvailableSlots(
+    id,
+    date,
+    req.user
+  );
+
+  return res.status(200).json(result);
+};
+
+module.exports =  {createAppointment,getAvailableSlots};
