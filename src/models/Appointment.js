@@ -49,7 +49,9 @@ appointmentSchema.index(
   },
   {
     unique: true,
-    partialFilterExpression: { isDeleted: false }
+    partialFilterExpression: {
+      status: "BOOKED"
+    }
   }
 );
 

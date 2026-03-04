@@ -1,4 +1,5 @@
 const appointmentService = require("../services/appointmentService");
+const { message } = require("../validators/doctorValidator");
 
 const createAppointment = async (req, res) => {
   const appointment = await appointmentService.createAppointment(
@@ -25,4 +26,18 @@ const getAvailableSlots = async (req, res) => {
   return res.status(200).json(result);
 };
 
-module.exports =  {createAppointment,getAvailableSlots};
+const cancelAppointment=async(req,res)=>{
+  const {id}=req.params;
+
+  const appointment=await appointmentService.cancelAppointment(
+    id,
+    req.user
+  );
+
+  return res.status(200).json({
+    message:"Appointment cancelled successfully",
+    appointment
+  });
+};
+
+module.exports =  {createAppointment,getAvailableSlots,cancelAppointment};

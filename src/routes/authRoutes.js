@@ -124,6 +124,12 @@ router.delete(
         wrapAsync(appointmentController.getAvailableSlots)
     );
 
+    //cancel appointment
+    router.patch("/appointments/:id/cancel",
+        authMiddleware,
+        wrapAsync(appointmentController.cancelAppointment)
+    );
+
 // router.get("/profile",authMiddleware,(req,res)=>{
 //     return res.status(200).json({
 //         message:"Profile accessed",

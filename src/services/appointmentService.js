@@ -145,4 +145,27 @@ const getAvailableSlots = async (doctorId, date, user) => {
     };
 };
 
-module.exports={createAppointment,getAvailableSlots};
+const cancelAppointment = async (appointmentId, user) => {
+
+  const appointment = await Appointment.findOne({
+    _id: appointmentId,
+    clinicId: user.clinicId,
+    isDeleted: false
+  });
+
+  if (!appointment) {
+    throw new ExpressError("Appointment not found", 404);
+  }
+
+  if (appointment.status === "CANCELLED") {
+    throw new ExpressError("Appointment already cancelled", 400);
+  }
+
+  appointment.status = "CANCELLED";
+
+  await appointment.save();
+
+  return appointment;
+};
+
+module.exports={createAppointment,getAvailableSlots,cancelAppointment};
