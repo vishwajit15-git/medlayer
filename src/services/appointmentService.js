@@ -168,4 +168,58 @@ const cancelAppointment = async (appointmentId, user) => {
   return appointment;
 };
 
-module.exports={createAppointment,getAvailableSlots,cancelAppointment};
+const getAppointments= async(query,user)=>{
+
+    let{page=1,limit=10,doctorId,status,date}=query;
+    page=parseInt(page);
+    limit=parseInt(limit);
+
+    const filter={
+        clinicId:user.clinicId,
+        isDeleted:false
+    };
+
+    //default  todays appointments
+
+    if (!date && !doctorId && !status) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        filter.appointmentDate = today;
+        filter.status = "BOOKED";
+    }
+
+    //if date given filter
+    if(date){
+        const normalizedDate=new Date(date);
+        normalizedDate.setHours(0,0,0,0);
+        filter.appointmentDate=normalizedDate;
+    }
+
+    //filetr by doctor
+    if(doctorId){
+        filter.doctorId=doctorId;
+    }
+
+    ///filter by status
+    if(status){
+        filter.status=status;
+    }
+
+    const total= await Appointment.countDocuments(filter);
+
+    const appointments= await Appointment.find(filter)
+        .populate("doctorId", "name specialization")
+        .populate("patientId", "name age")
+        .sort({ appointmentDate: 1, appointmentTime: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+    return {
+        page,
+        limit,
+        total,
+        appointments
+    };
+}
+
+module.exports={createAppointment,getAvailableSlots,cancelAppointment,getAppointments};

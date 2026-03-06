@@ -130,6 +130,12 @@ router.delete(
         wrapAsync(appointmentController.cancelAppointment)
     );
 
+    //get all appointments
+    router.get("/appointments",
+        authMiddleware,
+        wrapAsync(appointmentController.getAppointments)
+    );
+
 // router.get("/profile",authMiddleware,(req,res)=>{
 //     return res.status(200).json({
 //         message:"Profile accessed",

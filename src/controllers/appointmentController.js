@@ -40,4 +40,14 @@ const cancelAppointment=async(req,res)=>{
   });
 };
 
-module.exports =  {createAppointment,getAvailableSlots,cancelAppointment};
+const getAppointments= async(req,res)=>{
+  const result=await appointmentService.getAppointments(
+    req.query,
+    req.user
+  );
+
+  return res.status(200).json(result);
+}
+
+
+module.exports =  {createAppointment,getAvailableSlots,cancelAppointment,getAppointments};
