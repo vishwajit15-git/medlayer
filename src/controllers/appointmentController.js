@@ -49,5 +49,18 @@ const getAppointments= async(req,res)=>{
   return res.status(200).json(result);
 }
 
+const rescheduleAppointment =async (req,res)=>{
+  const appointment=await appointmentService.rescheduleAppointment(
+    req.params.id,
+    req.query,
+    req.user
+  );
 
-module.exports =  {createAppointment,getAvailableSlots,cancelAppointment,getAppointments};
+
+  return res.status(200).json({
+    message:"Appointment rescheduled succesfully",
+    appointment
+  });
+}
+
+module.exports =  {createAppointment,getAvailableSlots,cancelAppointment,getAppointments,rescheduleAppointment};

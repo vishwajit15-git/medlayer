@@ -2,6 +2,7 @@ const Appointment=require("../models/Appointment");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
 const ExpressError = require("../utils/ExpressError");
+const { id } = require("../validators/doctorValidator");
 
 //helper fxn that converts all times to equal comparable format
 const toMinutes = (timeStr) => {
@@ -222,4 +223,41 @@ const getAppointments= async(query,user)=>{
     };
 }
 
-module.exports={createAppointment,getAvailableSlots,cancelAppointment,getAppointments};
+const rescheduleAppointment=async(appointmentId,data,user)=>{
+    const {appointmentDate,appointmentTime}=data;
+
+    const appointment= await Appointment.findOne({
+        _id:appointmentId,
+        clinicId:user.clinicId,
+        isDeleted:false
+    });
+
+    if(!appointment){
+        throw new ExpressError("Appointment not found",404);
+    }
+
+    if(appointment.status !== "BOOKED"){
+        throw new ExpressError("Only Booked appointments can be rescheduled",400);
+    }
+
+    const normalizedDate= new Date(appointmentDate);
+    normalizedDate.setHours(0,0,0,0);
+
+    try{
+        appointment.appointmentDate=normalizedDate;
+        appointment.appointmentTime=appointmentTime;
+
+        await appointment.save();
+
+        return appointment;
+    }catch(err){
+        if(err.code === 11000){
+            throw new ExpressError("Slot already booked",409);
+        }
+
+        throw err;
+    }
+};
+
+
+module.exports={createAppointment,getAvailableSlots,cancelAppointment,getAppointments,rescheduleAppointment};

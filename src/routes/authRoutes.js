@@ -135,6 +135,14 @@ router.delete(
         authMiddleware,
         wrapAsync(appointmentController.getAppointments)
     );
+    
+    //Reschedule appointments
+
+    router.patch(
+        "/appointments/:id/reschedule",
+        authMiddleware,
+        wrapAsync(appointmentController.rescheduleAppointment)
+    );
 
 // router.get("/profile",authMiddleware,(req,res)=>{
 //     return res.status(200).json({
