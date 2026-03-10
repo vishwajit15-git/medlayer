@@ -52,7 +52,7 @@ const getAppointments= async(req,res)=>{
 const rescheduleAppointment =async (req,res)=>{
   const appointment=await appointmentService.rescheduleAppointment(
     req.params.id,
-    req.query,
+    req.body,
     req.user
   );
 
