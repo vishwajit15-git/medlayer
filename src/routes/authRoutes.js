@@ -17,6 +17,9 @@ const patientSchema = require("../validators/patientValidator");
 const patientController = require("../controllers/patientController");
 const appointmentSchema = require("../validators/appointmentValidator");
 const appointmentController=require("../controllers/appointmentController");
+const doctorBreakSchema = require("../validators/doctorBreakValidator");
+const doctorBreakController = require("../controllers/doctorBreakController");
+
 
 router.get("/whoami", authMiddleware, (req, res) => {
     res.json({
@@ -143,6 +146,19 @@ router.delete(
         authMiddleware,
         wrapAsync(appointmentController.rescheduleAppointment)
     );
+
+//Doctor Break
+    //create Doctor Break
+    router.post(
+        "/doctor-breaks",
+        authMiddleware,
+        roleMiddleware("admin"),
+        validate(doctorBreakSchema),
+        wrapAsync(doctorBreakController.createBreak)
+    );
+
+
+
 
 // router.get("/profile",authMiddleware,(req,res)=>{
 //     return res.status(200).json({

@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const doctorSchema=new mongoose.Schema({
@@ -19,14 +20,16 @@ const doctorSchema=new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    availability:{
+    availability:[{
         startTime:{
-            type:String
+            type:String,
+            required:true
         },
         endTime:{
-            type:String
+            type:String,
+            required:true
         }
-    }
+    }]
 },{timestamps:true});
 
 module.exports = mongoose.model("Doctor", doctorSchema);

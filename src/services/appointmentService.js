@@ -1,74 +1,111 @@
-const Appointment=require("../models/Appointment");
+const Appointment = require("../models/Appointment");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
+const DoctorBreak = require("../models/DoctorBreak");
 const ExpressError = require("../utils/ExpressError");
-const { id } = require("../validators/doctorValidator");
 
-//helper fxn that converts all times to equal comparable format
+
+//Helper: Convert "HH:MM" → minutes for comparisons
 const toMinutes = (timeStr) => {
   const [hours, minutes] = timeStr.split(":").map(Number);
   return hours * 60 + minutes;
 };
 
+
+//Helper: Convert minutes → "HH:MM"
 const toTimeString = (totalMinutes) => {
-    const hours = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
-    const minutes = (totalMinutes % 60).toString().padStart(2, "0");
-    return `${hours}:${minutes}`;
+  const hours = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
+  const minutes = (totalMinutes % 60).toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
 };
 
+
+/*
+Helper: Generate slots between two times
+Example: 13:00–14:30 → ["13:00","13:30","14:00"]*/
+const generateSlots = (start, end) => {
+
+  const slots = [];
+  let current = toMinutes(start);
+  const endMinutes = toMinutes(end);
+
+  const SLOT_SIZE = 30;
+
+  while (current < endMinutes) {
+    slots.push(toTimeString(current));
+    current += SLOT_SIZE;
+  }
+
+  return slots;
+};
+
+
+//CREATE APPOINTMENT
 const createAppointment = async (data, user) => {
-    const { doctorId, patientId, appointmentDate, appointmentTime } = data;
 
-    if (!doctorId) {
-        throw new ExpressError("Doctor is required", 400);
+  const { doctorId, patientId, appointmentDate, appointmentTime } = data;
+
+  if (!doctorId) {
+    throw new ExpressError("Doctor is required", 400);
+  }
+
+  if (!patientId) {
+    throw new ExpressError("Patient is required", 400);
+  }
+
+  // Verify doctor belongs to clinic
+  const doctor = await Doctor.findOne({
+    _id: doctorId,
+    clinicId: user.clinicId,
+    isDeleted: false
+  });
+
+  if (!doctor) {
+    throw new ExpressError("Doctor not found in this clinic", 404);
+  }
+
+  // Ensure doctor availability configured 
+  if (!doctor.availability || doctor.availability.length === 0) {
+    throw new ExpressError("Doctor availability not configured", 400);
+  }
+
+  //Validate appointment slot is inside a shift
+  const slotMinutes = toMinutes(appointmentTime);
+  let insideShift = false;
+
+  for (const shift of doctor.availability) {
+
+    const startMinutes = toMinutes(shift.startTime);
+    const endMinutes = toMinutes(shift.endTime);
+
+    if (slotMinutes >= startMinutes && slotMinutes < endMinutes) {
+      insideShift = true;
+      break;
     }
+  }
 
-    if (!patientId) {
-        throw new ExpressError("Patient is required", 400);
-    }
-    //1.verify doctor in same clinic
+  if (!insideShift) {
+    throw new ExpressError("Slot outside doctor availability", 400);
+  }
 
-    const doctor = await Doctor.findOne({
-        _id: doctorId,
-        clinicId: user.clinicId,
-        isDeleted: false
-    });
+  // Verify patient 
+  const patient = await Patient.findOne({
+    _id: patientId,
+    clinicId: user.clinicId,
+    isDeleted: false
+  });
 
-    if (!doctor) {
-        throw new ExpressError("Doctor not found in this clinic", 404);
-    }
-    //check if the user has given availablity info for doctor
-    if (!doctor.availability || !doctor.availability.startTime || !doctor.availability.endTime) {
-        throw new ExpressError("Doctor availability not configured", 400);
-    }
+  if (!patient) {
+    throw new ExpressError("Patient not found in this clinic", 404);
+  }
 
-    //fxn call to toMinutes() fxn
-    const slotMinutes = toMinutes(appointmentTime);
-    const startMinutes = toMinutes(doctor.availability.startTime);
-    const endMinutes = toMinutes(doctor.availability.endTime);
+  // Normalize date 
+  const normalizedDate = new Date(appointmentDate);
+  normalizedDate.setHours(0, 0, 0, 0);
 
-    if (slotMinutes < startMinutes || slotMinutes >= endMinutes) {      //Why >= endMinutes (important detail)-->If doctor works till 18:00 and slot is 30 minutes.Last valid slot start is 17:30, not 18:00.Your condition correctly blocks 18:00.
-        throw new ExpressError("Slot outside doctor availability", 400);
-    }
+  //Create appointment (race safe via DB index)
+  try {
 
-    //2.verify patient in same clinic
-    const patient = await Patient.findOne({
-        _id: patientId,
-        clinicId: user.clinicId,
-        isDeleted: false
-    });
-
-    if (!patient) {
-        throw new ExpressError("Patient not found in this clinic", 404);
-    }
-
-    // 3. normalize date
-
-    const normalizedDate = new Date(appointmentDate);
-    normalizedDate.setHours(0, 0, 0, 0);
-
-    // 4. try create appointment
-    try {
     const appointment = await Appointment.create({
       doctorId,
       patientId,
@@ -79,73 +116,111 @@ const createAppointment = async (data, user) => {
 
     return appointment;
 
-    // 5. catch duplicate error → slot booked
-    } catch (err) {
-        if (err.code === 11000) {
-        throw new ExpressError("Slot already booked", 409);
-        }
-        throw err;
+  } catch (err) {
+
+    if (err.code === 11000) {
+      throw new ExpressError("Slot already booked", 409);
     }
+
+    throw err;
+  }
 };
+
+
+//GET AVAILABLE SLOTS
 
 const getAvailableSlots = async (doctorId, date, user) => {
-    //1. verify doctor in same clinic
-    const doctor = await Doctor.findOne({
-        _id: doctorId,
-        clinicId: user.clinicId,
-        isDeleted: false
-    });
 
-    if (!doctor) {
-        throw new ExpressError("Doctor not found in this clinic", 404);
-    }
+  // Verify doctor 
+  const doctor = await Doctor.findOne({
+    _id: doctorId,
+    clinicId: user.clinicId,
+    isDeleted: false
+  });
 
-    // 2. ensure availability configured
-    if (!doctor.availability || !doctor.availability.startTime || !doctor.availability.endTime) {
-        throw new ExpressError("Doctor availability not configured", 400);
-    }
+  if (!doctor) {
+    throw new ExpressError("Doctor not found in this clinic", 404);
+  }
 
-    //3. normalize date
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
+  if (!doctor.availability || doctor.availability.length === 0) {
+    throw new ExpressError("Doctor availability not configured", 400);
+  }
 
-    // 4. generate ALL possible slots
-    const startMinutes = toMinutes(doctor.availability.startTime);
-    const endMinutes = toMinutes(doctor.availability.endTime);
+  // Normalize date 
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
 
-    const SLOT_SIZE = 30;
 
-    const allSlots = [];
-    let current = startMinutes;
+  //Fetch doctor breaks 
+  const breaks = await DoctorBreak.find({
+    doctorId,
+    clinicId: user.clinicId,
+    date: normalizedDate,
+    isDeleted: false
+  });
+
+  //Convert breaks to blocked slots
+  let breakSlots = [];
+
+  for (const br of breaks) {
+    const slots = generateSlots(br.startTime, br.endTime);
+    breakSlots.push(...slots);
+  }
+
+  const breakSet = new Set(breakSlots);
+
+
+  //Generate slots from ALL shifts
+  const SLOT_SIZE = 30;
+  let allSlots = [];
+
+  for (const shift of doctor.availability) {
+
+    let current = toMinutes(shift.startTime);
+    const endMinutes = toMinutes(shift.endTime);
 
     while (current < endMinutes) {
-        allSlots.push(toTimeString(current));
-        current += SLOT_SIZE;
+      allSlots.push(toTimeString(current));
+      current += SLOT_SIZE;
     }
+  }
 
-    // 5. fetch booked slots
-    const bookedAppointments = await Appointment.find({
-        doctorId,
-        clinicId: user.clinicId,
-        appointmentDate: normalizedDate,
-        isDeleted: false,
-        status: "BOOKED"
-    }).select("appointmentTime -_id");
 
-    const bookedSet = new Set(
-        bookedAppointments.map((a) => a.appointmentTime)
-    );
+  //Fetch booked appointments 
+  const bookedAppointments = await Appointment.find({
+    doctorId,
+    clinicId: user.clinicId,
+    appointmentDate: normalizedDate,
+    isDeleted: false,
+    status: "BOOKED"
+  }).select("appointmentTime -_id");
 
-    // 6. subtract booked from all
-    const availableSlots = allSlots.filter((slot) => !bookedSet.has(slot));
+  const bookedSet = new Set(
+    bookedAppointments.map(a => a.appointmentTime)
+  );
 
-    return {
-        doctorId,
-        date,
-        availableSlots
-    };
+
+  //Remove booked slots 
+  let availableSlots = allSlots.filter(
+    slot => !bookedSet.has(slot)
+  );
+
+
+  //Remove break slots 
+  availableSlots = availableSlots.filter(
+    slot => !breakSet.has(slot)
+  );
+
+
+  return {
+    doctorId,
+    date,
+    availableSlots
+  };
 };
 
+
+// CANCEL APPOINTMENT
 const cancelAppointment = async (appointmentId, user) => {
 
   const appointment = await Appointment.findOne({
@@ -163,101 +238,125 @@ const cancelAppointment = async (appointmentId, user) => {
   }
 
   appointment.status = "CANCELLED";
-
   await appointment.save();
 
   return appointment;
 };
 
-const getAppointments= async(query,user)=>{
 
-    let{page=1,limit=10,doctorId,status,date}=query;
-    page=parseInt(page);
-    limit=parseInt(limit);
+//GET APPOINTMENTS (Pagination + Filters)
+const getAppointments = async (query, user) => {
 
-    const filter={
-        clinicId:user.clinicId,
-        isDeleted:false
-    };
+  let { page = 1, limit = 10, doctorId, status, date } = query;
 
-    //default  todays appointments
+  page = parseInt(page);
+  limit = parseInt(limit);
 
-    if (!date && !doctorId && !status) {
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        filter.appointmentDate = today;
-        filter.status = "BOOKED";
-    }
+  const filter = {
+    clinicId: user.clinicId,
+    isDeleted: false
+  };
 
-    //if date given filter
-    if(date){
-        const normalizedDate=new Date(date);
-        normalizedDate.setHours(0,0,0,0);
-        filter.appointmentDate=normalizedDate;
-    }
 
-    //filetr by doctor
-    if(doctorId){
-        filter.doctorId=doctorId;
-    }
+  //Default: today's booked appointments 
+  if (!date && !doctorId && !status) {
 
-    ///filter by status
-    if(status){
-        filter.status=status;
-    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const total= await Appointment.countDocuments(filter);
+    filter.appointmentDate = today;
+    filter.status = "BOOKED";
+  }
 
-    const appointments= await Appointment.find(filter)
-        .populate("doctorId", "name specialization")
-        .populate("patientId", "name age")
-        .sort({ appointmentDate: 1, appointmentTime: 1 })
-        .skip((page - 1) * limit)
-        .limit(limit);
 
-    return {
-        page,
-        limit,
-        total,
-        appointments
-    };
-}
+  //Filter by date
+  if (date) {
 
-const rescheduleAppointment=async(appointmentId,data,user)=>{
-    const {appointmentDate,appointmentTime}=data;
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
 
-    const appointment= await Appointment.findOne({
-        _id:appointmentId,
-        clinicId:user.clinicId,
-        isDeleted:false
-    });
+    filter.appointmentDate = normalizedDate;
+  }
 
-    if(!appointment){
-        throw new ExpressError("Appointment not found",404);
-    }
 
-    if(appointment.status !== "BOOKED"){
-        throw new ExpressError("Only Booked appointments can be rescheduled",400);
-    }
+  // Filter by doctor
+  if (doctorId) {
+    filter.doctorId = doctorId;
+  }
 
-    const normalizedDate= new Date(appointmentDate);
-    normalizedDate.setHours(0,0,0,0);
 
-    try{
-        appointment.appointmentDate=normalizedDate;
-        appointment.appointmentTime=appointmentTime;
+  //Filter by status
+  if (status) {
+    filter.status = status;
+  }
 
-        await appointment.save();
 
-        return appointment;
-    }catch(err){
-        if(err.code === 11000){
-            throw new ExpressError("Slot already booked",409);
-        }
+  const total = await Appointment.countDocuments(filter);
 
-        throw err;
-    }
+  const appointments = await Appointment.find(filter)
+    .populate("doctorId", "name specialization")
+    .populate("patientId", "name age")
+    .sort({ appointmentDate: 1, appointmentTime: 1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+
+  return {
+    page,
+    limit,
+    total,
+    appointments
+  };
 };
 
 
-module.exports={createAppointment,getAvailableSlots,cancelAppointment,getAppointments,rescheduleAppointment};
+// RESCHEDULE APPOINTMENT
+
+const rescheduleAppointment = async (appointmentId, data, user) => {
+
+  const { appointmentDate, appointmentTime } = data;
+
+  const appointment = await Appointment.findOne({
+    _id: appointmentId,
+    clinicId: user.clinicId,
+    isDeleted: false
+  });
+
+  if (!appointment) {
+    throw new ExpressError("Appointment not found", 404);
+  }
+
+  if (appointment.status !== "BOOKED") {
+    throw new ExpressError("Only booked appointments can be rescheduled", 400);
+  }
+
+  const normalizedDate = new Date(appointmentDate);
+  normalizedDate.setHours(0, 0, 0, 0);
+
+  try {
+
+    appointment.appointmentDate = normalizedDate;
+    appointment.appointmentTime = appointmentTime;
+
+    await appointment.save();
+
+    return appointment;
+
+  } catch (err) {
+
+    if (err.code === 11000) {
+      throw new ExpressError("Slot already booked", 409);
+    }
+
+    throw err;
+  }
+};
+
+
+module.exports = {
+  createAppointment,
+  getAvailableSlots,
+  cancelAppointment,
+  getAppointments,
+  rescheduleAppointment
+};
