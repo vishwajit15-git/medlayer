@@ -3,6 +3,8 @@ const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
 const DoctorBreak = require("../models/DoctorBreak");
 const ExpressError = require("../utils/ExpressError");
+const DoctorHoliday = require("../models/DoctorHoliday");
+const { message } = require("../validators/doctorValidator");
 
 
 //Helper: Convert "HH:MM" → minutes for comparisons
@@ -53,6 +55,10 @@ const createAppointment = async (data, user) => {
     throw new ExpressError("Patient is required", 400);
   }
 
+  // Normalize date FIRST
+  const normalizedDate = new Date(appointmentDate);
+  normalizedDate.setHours(0, 0, 0, 0);
+
   // Verify doctor belongs to clinic
   const doctor = await Doctor.findOne({
     _id: doctorId,
@@ -62,6 +68,18 @@ const createAppointment = async (data, user) => {
 
   if (!doctor) {
     throw new ExpressError("Doctor not found in this clinic", 404);
+  }
+
+  //holiday check 
+  const holiday=await DoctorHoliday.findOne({
+    doctorId,
+    clinicId:user.clinicId,
+    date:normalizedDate,
+    isDeleted:false
+  });
+
+  if(holiday){
+    throw new ExpressError("Doctor is on Holiday",400)
   }
 
   // Ensure doctor availability configured 
@@ -88,6 +106,23 @@ const createAppointment = async (data, user) => {
     throw new ExpressError("Slot outside doctor availability", 400);
   }
 
+
+  //break check ,wheater the patient booked the slot that is doctors break slot
+  const breaks=await DoctorBreak.findOne({
+    doctorId,
+    clinicId:user.clinicId,
+    date:normalizedDate,
+    isDeleted:false
+  });
+
+  for(const br of breaks){
+    const breakSlots=generateSlots(br.startTime,br.endTime);
+
+    if(breakSlots.includes(appointmentTime)){
+      throw new ExpressError("Slot you are booking falls under Doctor Break",400);
+    }
+  }
+  
   // Verify patient 
   const patient = await Patient.findOne({
     _id: patientId,
@@ -98,10 +133,6 @@ const createAppointment = async (data, user) => {
   if (!patient) {
     throw new ExpressError("Patient not found in this clinic", 404);
   }
-
-  // Normalize date 
-  const normalizedDate = new Date(appointmentDate);
-  normalizedDate.setHours(0, 0, 0, 0);
 
   //Create appointment (race safe via DB index)
   try {
@@ -169,6 +200,23 @@ const getAvailableSlots = async (doctorId, date, user) => {
 
   const breakSet = new Set(breakSlots);
 
+  //Is there leave for doctor
+
+  const holiday=await DoctorHoliday.findOne({
+    doctorId,
+    clinicId:user.clinicId,
+    date:normalizedDate,
+    isDeleted:false
+  })
+
+  if(holiday){
+    return{
+      doctorId,
+      date,
+      availableSlots:[],
+      message:"Doctor is on holiday"
+    };
+  }
 
   //Generate slots from ALL shifts
   const SLOT_SIZE = 30;

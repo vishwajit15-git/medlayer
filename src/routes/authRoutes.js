@@ -19,6 +19,8 @@ const appointmentSchema = require("../validators/appointmentValidator");
 const appointmentController=require("../controllers/appointmentController");
 const doctorBreakSchema = require("../validators/doctorBreakValidator");
 const doctorBreakController = require("../controllers/doctorBreakController");
+const doctorHolidaySchema = require("../validators/doctorHolidayValidator");
+const doctorHolidayController=require("../controllers/doctorHolidayController");
 
 
 router.get("/whoami", authMiddleware, (req, res) => {
@@ -157,6 +159,31 @@ router.delete(
         wrapAsync(doctorBreakController.createBreak)
     );
 
+
+//Doctor Holiday
+    //add holiday
+    router.post(
+        "/doctor-holidays",
+        authMiddleware,
+        roleMiddleware("admin"),
+        validate(doctorHolidaySchema),
+        wrapAsync(doctorHolidayController.createHoliday)
+    );  
+
+    //get holidays
+    router.get(
+        "/doctor-holidays",
+        authMiddleware,
+        wrapAsync(doctorHolidayController.getHoliday)
+    );
+
+    //delete holidays
+    router.delete(
+        "/doctor-holidays/:id",
+        authMiddleware,
+        roleMiddleware("admin"),
+        wrapAsync(doctorHolidayController.deleteHoliday)
+    );
 
 
 
