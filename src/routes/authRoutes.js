@@ -149,6 +149,14 @@ router.delete(
         wrapAsync(appointmentController.rescheduleAppointment)
     );
 
+    //Appointment Completed
+    router.patch(
+        "/appointments/:id/complete",
+        authMiddleware,
+        roleMiddleware("admin"),
+        wrapAsync(appointmentController.completeAppointment)
+    );
+
 //Doctor Break
     //create Doctor Break
     router.post(

@@ -63,4 +63,17 @@ const rescheduleAppointment =async (req,res)=>{
   });
 }
 
-module.exports =  {createAppointment,getAvailableSlots,cancelAppointment,getAppointments,rescheduleAppointment};
+
+const completeAppointment=async(req,res)=>{
+  const appointment=await appointmentService.completeAppointment(
+    req.params.id,
+    req.user
+  );
+
+  return res.status(200).json({
+    message:"Appointment completed",
+    appointment
+  });
+}
+
+module.exports =  {createAppointment,getAvailableSlots,cancelAppointment,getAppointments,rescheduleAppointment,completeAppointment};

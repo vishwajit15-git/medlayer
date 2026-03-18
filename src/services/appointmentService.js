@@ -6,6 +6,15 @@ const ExpressError = require("../utils/ExpressError");
 const DoctorHoliday = require("../models/DoctorHoliday");
 const { message } = require("../validators/doctorValidator");
 
+//Helper function:check if it is past appointment
+const isPastAppointment=(date,time)=>{
+  const [h,m]=time.split(":").map(Number);
+
+  const appointmentDateTime=new Date(date);
+  appointmentDateTime.setHours(h,m,0,0);
+
+  return appointmentDateTime< new Date();
+};
 
 //Helper: Convert "HH:MM" → minutes for comparisons
 const toMinutes = (timeStr) => {
@@ -108,7 +117,7 @@ const createAppointment = async (data, user) => {
 
 
   //break check ,wheater the patient booked the slot that is doctors break slot
-  const breaks=await DoctorBreak.findOne({
+  const breaks=await DoctorBreak.find({
     doctorId,
     clinicId:user.clinicId,
     date:normalizedDate,
@@ -285,6 +294,11 @@ const cancelAppointment = async (appointmentId, user) => {
     throw new ExpressError("Appointment already cancelled", 400);
   }
 
+  //cannot cancel if time of slot has passed
+  if(isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
+    throw new ExpressError("Cannot cancel Passed Appointment",400);
+  }
+
   appointment.status = "CANCELLED";
   await appointment.save();
 
@@ -349,6 +363,15 @@ const getAppointments = async (query, user) => {
     .limit(limit);
 
 
+  //change the status of appointment
+  for(const appt of appointments){
+    if(appt.status === "BOOKED" && isPastAppointment(appt.appointmentDate,appt.appointmentTime)){
+      appt.status="NO_SHOW";
+      await appt.save();
+    }
+  }
+
+
   return {
     page,
     limit,
@@ -369,6 +392,11 @@ const rescheduleAppointment = async (appointmentId, data, user) => {
     clinicId: user.clinicId,
     isDeleted: false
   });
+
+  //cannot reschedule passed appointments
+  if(isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
+    throw new ExpressError("Cannot reschedule Passed Appointment",400);
+  }
 
   if (!appointment) {
     throw new ExpressError("Appointment not found", 404);
@@ -400,11 +428,37 @@ const rescheduleAppointment = async (appointmentId, data, user) => {
   }
 };
 
+//Appointment "COMPLETED" API
+const completeAppointment=async(id,user)=>{
+  const appointment=await Appointment.findOne({
+    _id:id,
+    clinicId:user.clinicId,
+    isDeleted:false
+  });
+
+  if(!appointment){
+    throw new ExpressError("Appointment not found",404);
+  }
+
+  if(!["BOOKED", "NO_SHOW"].includes(appointment.status)){
+    throw new ExpressError("Only BOOKED appointments can be COMPLETED",400);
+  }
+
+  if(!isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
+    throw new ExpressError("Cannot complete future Appointments",400);
+  }
+
+  appointment.status="COMPLETED";
+  await appointment.save();
+
+  return appointment;
+}
 
 module.exports = {
   createAppointment,
   getAvailableSlots,
   cancelAppointment,
   getAppointments,
-  rescheduleAppointment
+  rescheduleAppointment,
+  completeAppointment
 };
