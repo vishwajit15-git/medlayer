@@ -76,4 +76,38 @@ const completeAppointment=async(req,res)=>{
   });
 }
 
-module.exports =  {createAppointment,getAvailableSlots,cancelAppointment,getAppointments,rescheduleAppointment,completeAppointment};
+const checkInAppointment=async (req,res)=>{
+  const appointment=await appointmentService.checkInAppointment(
+    req.params.id,
+    req.user
+  );
+
+  return res.status(200).json({
+    message:"Patient Checked in successfully",
+    appointment
+  })
+}
+
+const addAppointmentNotes=async(req,res)=>{
+  const appointment=await appointmentService.addAppointmentNotes(
+    req.params.id,
+    req.body,
+    req.user
+  );
+
+  return res.status(200).json({
+    message:"Notes added successfully",
+    appointment
+  });
+
+}
+module.exports =  {
+  createAppointment,
+  getAvailableSlots,
+  cancelAppointment,
+  getAppointments,
+  rescheduleAppointment,
+  completeAppointment,
+  checkInAppointment,
+  addAppointmentNotes
+};

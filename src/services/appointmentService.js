@@ -440,8 +440,11 @@ const completeAppointment=async(id,user)=>{
     throw new ExpressError("Appointment not found",404);
   }
 
-  if(!["BOOKED", "NO_SHOW"].includes(appointment.status)){
-    throw new ExpressError("Only BOOKED appointments can be COMPLETED",400);
+  if (!["BOOKED", "CHECKED_IN"].includes(appointment.status)) {
+    throw new ExpressError(
+      "Only BOOKED or CHECKED_IN appointments can be completed",
+      400
+    );
   }
 
   if(!isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
@@ -454,11 +457,63 @@ const completeAppointment=async(id,user)=>{
   return appointment;
 }
 
+//Appointment Check-In
+const checkInAppointment=async(id,user)=>{
+  const appointment=await Appointment.findOne({
+    _id:id,
+    clinicId:user.clinicId,
+    isDeleted:false
+  });
+
+  if(!appointment){
+    throw new ExpressError("Appointment not found",404);
+  }
+
+  if(appointment.status !== "BOOKED"){
+    throw new ExpressError("Only BOOKED appointments can be CHECKD_IN");
+  }
+
+  appointment.status="CHECKED_IN";
+
+  await appointment.save();
+  return appointment;
+}
+
+//ADD APPOINTMENT NOTES
+const addAppointmentNotes=async (id,data,user)=>{
+  const {notes}=data;
+
+  if(!notes || notes.trim()=== ""){
+    throw new ExpressError("Notes cannot be empty",400);
+  }
+
+  const appointment=await Appointment.findOne({
+    _id:id,
+    clinicId:user.clinicId,
+    isDeleted:false
+  });
+
+  if(!appointment){
+    throw new ExpressError("Appointment not found",404);
+  }
+
+  if(appointment.status !== "COMPLETED"){
+    throw new ExpressError("Notes can be added only to COMPLETED appointments",400);
+  }
+
+  appointment.notes=notes.trim();
+  await appointment.save();
+
+  return appointment;
+}
+
 module.exports = {
   createAppointment,
   getAvailableSlots,
   cancelAppointment,
   getAppointments,
   rescheduleAppointment,
-  completeAppointment
+  completeAppointment,
+  checkInAppointment,
+  addAppointmentNotes
 };

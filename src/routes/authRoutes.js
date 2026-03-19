@@ -157,6 +157,20 @@ router.delete(
         wrapAsync(appointmentController.completeAppointment)
     );
 
+    //Patient Check in
+    router.patch(
+        "/appointments/:id/check-in",
+        authMiddleware,
+        wrapAsync(appointmentController.checkInAppointment)
+    );
+
+    //Appointment Noted Adding
+    router.patch(
+        "/appointments/:id/notes",
+        authMiddleware,
+        wrapAsync(appointmentController.addAppointmentNotes)
+    );
+
 //Doctor Break
     //create Doctor Break
     router.post(

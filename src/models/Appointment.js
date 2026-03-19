@@ -30,12 +30,16 @@ const appointmentSchema=new mongoose.Schema({
     },
     status:{
         type:String,
-        enum:["BOOKED","CANCELLED","COMPLETED","NO_SHOW"],
+        enum:["BOOKED","CANCELLED","COMPLETED","NO_SHOW","CHECKED_IN"],
         default:"BOOKED"
     },
     isDeleted:{
         type:Boolean,
         default:false
+    },
+    notes:{
+        type:String,
+        default:""
     }
 
 },{timestamps:true});

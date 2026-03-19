@@ -45,7 +45,7 @@ const registerClinic = async (data) => {
                 role: user[0].role
             },
             process.env.JWT_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: "7d" }
         );
 
         return token;
