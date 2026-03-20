@@ -1,4 +1,5 @@
 const patientService = require("../services/patientService");
+const { message } = require("../validators/patientValidator");
 
 const createPatient = async (req, res) => {
     const patient = await patientService.createPatient(req.body, req.user);
@@ -32,8 +33,22 @@ const deletePatient=async (req,res)=>{
     });
 };
 
+const searchPatient=async(req,res)=>{
+    const {query}=req.query;
+
+    const patients = await patientService.searchPatient(
+        query,
+        req.user
+    );
+
+    return res.status(200).json({
+        patients
+    });
+}
+
 module.exports = {
     createPatient,
     getPatients,
-    deletePatient
+    deletePatient,
+    searchPatient
 };

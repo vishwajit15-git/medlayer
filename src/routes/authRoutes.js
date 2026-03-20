@@ -114,6 +114,12 @@ router.delete(
     wrapAsync(patientController.deletePatient)
 );
 
+router.get(
+    "/patients/search",
+    authMiddleware,
+    wrapAsync(patientController.searchPatient)
+);
+
 
 //Appointment
     //Create appointment
