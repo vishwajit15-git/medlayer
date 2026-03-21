@@ -101,6 +101,19 @@ const addAppointmentNotes=async(req,res)=>{
   });
 
 }
+
+const getDoctorSchedule=async(req,res)=>{
+  const {id}=req.params;
+  const {date}=req.query;
+
+  const result=await appointmentService.getDoctorSchedule(
+    id,date,req.user
+  );
+
+  return res.status(200).json(result);
+};
+
+
 module.exports =  {
   createAppointment,
   getAvailableSlots,
@@ -109,5 +122,6 @@ module.exports =  {
   rescheduleAppointment,
   completeAppointment,
   checkInAppointment,
-  addAppointmentNotes
+  addAppointmentNotes,
+  getDoctorSchedule
 };

@@ -5,6 +5,9 @@ const DoctorBreak = require("../models/DoctorBreak");
 const ExpressError = require("../utils/ExpressError");
 const DoctorHoliday = require("../models/DoctorHoliday");
 const { message } = require("../validators/doctorValidator");
+const { date } = require("joi");
+const { all } = require("../routes/authRoutes");
+const appointmentSchema = require("../validators/appointmentValidator");
 
 //Helper function:check if it is past appointment
 const isPastAppointment=(date,time)=>{
@@ -382,7 +385,6 @@ const getAppointments = async (query, user) => {
 
 
 // RESCHEDULE APPOINTMENT
-
 const rescheduleAppointment = async (appointmentId, data, user) => {
 
   const { appointmentDate, appointmentTime } = data;
@@ -507,6 +509,110 @@ const addAppointmentNotes=async (id,data,user)=>{
   return appointment;
 }
 
+//Get full day schedule of doctor
+const getDoctorSchedule=async(doctorId,date,user)=>{
+
+  //validate doctor
+  const doctor=await Doctor.findOne({
+    _id:doctorId,
+    clinicId:user.clinicId,
+    isDeleted:false
+  });
+
+  if(!doctor){
+    throw new ExpressError("Doctor not found in this Clinic",404);
+  }
+
+  //normalize date
+  const normalizedDate=new Date(date);
+  normalizedDate.setHours(0,0,0,0);
+
+  //check for holiday
+  const holiday=await DoctorHoliday.findOne({
+    doctorId,
+    clinicId:user.clinicId,
+    date:normalizedDate,
+    isDeleted:false
+  });
+
+  if(holiday){
+    return {
+      doctorId,
+      date,
+      schedule:[],
+      message:"Doctor on Holiday"
+    };
+  }
+
+  //check avaibility
+  if(!doctor.availability || doctor.availability.length===0){
+    throw new ExpressError("Doctor Availability not configuired",400);
+  }
+
+  //generate all slots from multi shifts
+  const SLOT_SIZE=30;
+  let allSlots=[];
+
+  for(const shift of doctor.availability){
+    let current = toMinutes(shift.startTime);
+    const end=toMinutes(shift.endTime);
+
+    while(current <end){
+      allSlots.push(toTimeString(current));
+      current += SLOT_SIZE;
+    }
+  }
+
+  //get breaks
+  const breaks=await DoctorBreak.find({
+    doctorId,
+    clinicId:user.clinicId,
+    date:normalizedDate,
+    isDeleted:false
+  });
+
+  let breakSlots=[];
+  for(const br of breaks){
+    const slots=generateSlots(br.startTime,br.endTime);
+    breakSlots.push(...slots);
+  }
+
+  const breakSet= new Set(breakSlots);
+
+  //get booked appointments
+  const appointments=await Appointment.find({
+    doctorId,
+    clinicId:user.clinicId,
+    appointmentDate:normalizedDate,
+    isDeleted:false,
+    status:"BOOKED"
+  }).select("appointmentTime -_id");
+
+  const bookedSet = new Set(
+        appointments.map(a => a.appointmentTime)
+  );
+
+  //build schedule
+  const schedule=allSlots.map(time => {
+    if (breakSet.has(time)) {
+            return { time, status: "BREAK" };
+        }
+
+        if (bookedSet.has(time)) {
+            return { time, status: "BOOKED" };
+        }
+
+        return { time, status: "AVAILABLE" };
+  });
+
+  return {
+    doctorId,
+    date,
+    schedule
+  };
+
+};
+
 module.exports = {
   createAppointment,
   getAvailableSlots,
@@ -515,5 +621,6 @@ module.exports = {
   rescheduleAppointment,
   completeAppointment,
   checkInAppointment,
-  addAppointmentNotes
+  addAppointmentNotes,
+  getDoctorSchedule
 };

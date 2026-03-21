@@ -91,7 +91,12 @@ router.delete(
     roleMiddleware("admin"),
     wrapAsync(doctorController.deleteDoctor)
 );
-
+    //get docto schedule
+router.get(
+    "/doctors/:id/schedule",
+    authMiddleware,
+    wrapAsync(appointmentController.getDoctorSchedule)
+);
 
 //Patient
     //Create Patient
