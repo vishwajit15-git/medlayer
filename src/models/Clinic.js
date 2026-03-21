@@ -24,6 +24,16 @@ const clinicSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    workingHours: {
+        startTime: {
+            type: String,
+            default: "09:00"
+        },
+        endTime: {
+            type: String,
+            default: "18:00"
+        }
     }
 
 }, { timestamps: true });

@@ -83,6 +83,22 @@ const createAppointment = async (data, user) => {
     throw new ExpressError("Doctor not found in this clinic", 404);
   }
 
+  //fetch clinic for checking if it lies in/outside the clinic working hours
+  const clinic=await Clinic.findById(user.clinicId);
+
+  if(!clinic || !clinic.workingHours){
+    throw new ExpressError("Clinic working hours not configured",400);
+  }
+
+  //validate the slot inside the working hours 
+  const clinicStart=toMinutes(clinic.workingHours.startTime);
+  const clinicEnd=toMinutes(clinic.workingHours.endTime);
+  const slotMinutes=toMinutes(appointmentTime);
+
+  if (slotMinutes < clinicStart || slotMinutes >= clinicEnd) {
+    throw new ExpressError("Slot outside clinic working hours", 400);
+  }
+
   //holiday check 
   const holiday=await DoctorHoliday.findOne({
     doctorId,
@@ -101,7 +117,7 @@ const createAppointment = async (data, user) => {
   }
 
   //Validate appointment slot is inside a shift
-  const slotMinutes = toMinutes(appointmentTime);
+  // const slotMinutes = toMinutes(appointmentTime);
   let insideShift = false;
 
   for (const shift of doctor.availability) {
@@ -214,7 +230,6 @@ const getAvailableSlots = async (doctorId, date, user) => {
   const breakSet = new Set(breakSlots);
 
   //Is there leave for doctor
-
   const holiday=await DoctorHoliday.findOne({
     doctorId,
     clinicId:user.clinicId,
@@ -246,6 +261,15 @@ const getAvailableSlots = async (doctorId, date, user) => {
     }
   }
 
+  const clinic = await Clinic.findById(user.clinicId);
+
+  const clinicStart = toMinutes(clinic.workingHours.startTime);
+  const clinicEnd = toMinutes(clinic.workingHours.endTime);
+
+  allSlots = allSlots.filter(slot => {
+    const m = toMinutes(slot);
+    return m >= clinicStart && m < clinicEnd;
+  });
 
   //Fetch booked appointments 
   const bookedAppointments = await Appointment.find({
@@ -510,100 +534,116 @@ const addAppointmentNotes=async (id,data,user)=>{
   return appointment;
 }
 
-//Get full day schedule of doctor
-const getDoctorSchedule=async(doctorId,date,user)=>{
+const getDoctorSchedule = async (doctorId, date, user) => {
 
   //validate doctor
-  const doctor=await Doctor.findOne({
-    _id:doctorId,
-    clinicId:user.clinicId,
-    isDeleted:false
+  const doctor = await Doctor.findOne({
+    _id: doctorId,
+    clinicId: user.clinicId,
+    isDeleted: false
   });
 
-  if(!doctor){
-    throw new ExpressError("Doctor not found in this Clinic",404);
+  if (!doctor) {
+    throw new ExpressError("Doctor not found in this Clinic", 404);
   }
 
   //normalize date
-  const normalizedDate=new Date(date);
-  normalizedDate.setHours(0,0,0,0);
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
 
-  //check for holiday
-  const holiday=await DoctorHoliday.findOne({
+  //check holiday (EARLY EXIT)
+  const holiday = await DoctorHoliday.findOne({
     doctorId,
-    clinicId:user.clinicId,
-    date:normalizedDate,
-    isDeleted:false
+    clinicId: user.clinicId,
+    date: normalizedDate,
+    isDeleted: false
   });
 
-  if(holiday){
+  if (holiday) {
     return {
       doctorId,
       date,
-      schedule:[],
-      message:"Doctor on Holiday"
+      schedule: [],
+      message: "Doctor on Holiday"
     };
   }
 
-  //check avaibility
-  if(!doctor.availability || doctor.availability.length===0){
-    throw new ExpressError("Doctor Availability not configuired",400);
+  //validate availability
+  if (!doctor.availability || doctor.availability.length === 0) {
+    throw new ExpressError("Doctor Availability not configured", 400);
   }
 
-  //generate all slots from multi shifts
-  const SLOT_SIZE=30;
-  let allSlots=[];
+  //generate all slots
+  const SLOT_SIZE = 30;
+  let allSlots = [];
 
-  for(const shift of doctor.availability){
+  for (const shift of doctor.availability) {
     let current = toMinutes(shift.startTime);
-    const end=toMinutes(shift.endTime);
+    const end = toMinutes(shift.endTime);
 
-    while(current <end){
+    while (current < end) {
       allSlots.push(toTimeString(current));
       current += SLOT_SIZE;
     }
   }
 
-  //get breaks
-  const breaks=await DoctorBreak.find({
-    doctorId,
-    clinicId:user.clinicId,
-    date:normalizedDate,
-    isDeleted:false
+  //apply CLINIC WORKING HOURS
+  const clinic = await Clinic.findById(user.clinicId);
+
+  if (!clinic || !clinic.workingHours) {
+    throw new ExpressError("Clinic working hours not configured", 400);
+  }
+
+  const clinicStart = toMinutes(clinic.workingHours.startTime);
+  const clinicEnd = toMinutes(clinic.workingHours.endTime);
+
+  allSlots = allSlots.filter(slot => {
+    const m = toMinutes(slot);
+    return m >= clinicStart && m < clinicEnd;
   });
 
-  let breakSlots=[];
-  for(const br of breaks){
-    const slots=generateSlots(br.startTime,br.endTime);
+  // get breaks
+  const breaks = await DoctorBreak.find({
+    doctorId,
+    clinicId: user.clinicId,
+    date: normalizedDate,
+    isDeleted: false
+  });
+
+  let breakSlots = [];
+
+  for (const br of breaks) {
+    const slots = generateSlots(br.startTime, br.endTime);
     breakSlots.push(...slots);
   }
 
-  const breakSet= new Set(breakSlots);
+  const breakSet = new Set(breakSlots);
 
-  //get booked appointments
-  const appointments=await Appointment.find({
+  // get booked appointments
+  const appointments = await Appointment.find({
     doctorId,
-    clinicId:user.clinicId,
-    appointmentDate:normalizedDate,
-    isDeleted:false,
-    status:"BOOKED"
+    clinicId: user.clinicId,
+    appointmentDate: normalizedDate,
+    isDeleted: false,
+    status: "BOOKED"
   }).select("appointmentTime -_id");
 
   const bookedSet = new Set(
-        appointments.map(a => a.appointmentTime)
+    appointments.map(a => a.appointmentTime)
   );
 
   //build schedule
-  const schedule=allSlots.map(time => {
+  const schedule = allSlots.map(time => {
+
     if (breakSet.has(time)) {
-            return { time, status: "BREAK" };
-        }
+      return { time, status: "BREAK" };
+    }
 
-        if (bookedSet.has(time)) {
-            return { time, status: "BOOKED" };
-        }
+    if (bookedSet.has(time)) {
+      return { time, status: "BOOKED" };
+    }
 
-        return { time, status: "AVAILABLE" };
+    return { time, status: "AVAILABLE" };
   });
 
   return {
@@ -611,7 +651,6 @@ const getDoctorSchedule=async(doctorId,date,user)=>{
     date,
     schedule
   };
-
 };
 
 //GET BULK APPOINTMENT LISTING it is done for exporting the appointments in bulk ex for data analytics
