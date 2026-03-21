@@ -39,7 +39,8 @@ const appointmentSchema=new mongoose.Schema({
     },
     notes:{
         type:String,
-        default:""
+        default:null,
+        trim:true
     }
 
 },{timestamps:true});

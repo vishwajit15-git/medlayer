@@ -113,6 +113,14 @@ const getDoctorSchedule=async(req,res)=>{
   return res.status(200).json(result);
 };
 
+const getBulkAppointments = async (req, res) => {
+  const result = await appointmentService.getBulkAppointments(
+    req.query,
+    req.user
+  );
+
+  return res.status(200).json(result);
+};
 
 module.exports =  {
   createAppointment,
@@ -123,5 +131,6 @@ module.exports =  {
   completeAppointment,
   checkInAppointment,
   addAppointmentNotes,
-  getDoctorSchedule
+  getDoctorSchedule,
+  getBulkAppointments
 };

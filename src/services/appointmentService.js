@@ -8,6 +8,7 @@ const { message } = require("../validators/doctorValidator");
 const { date } = require("joi");
 const { all } = require("../routes/authRoutes");
 const appointmentSchema = require("../validators/appointmentValidator");
+const Clinic = require("../models/Clinic");
 
 //Helper function:check if it is past appointment
 const isPastAppointment=(date,time)=>{
@@ -613,6 +614,49 @@ const getDoctorSchedule=async(doctorId,date,user)=>{
 
 };
 
+//GET BULK APPOINTMENT LISTING it is done for exporting the appointments in bulk ex for data analytics
+const getBulkAppointments=async(query,user)=>{
+  let {startDate,endDate,doctorId,status}=query;
+
+  if(!startDate || !endDate){
+    throw new ExpressError("StartDate and EndDate required",400);
+  }
+
+  const start=new Date(startDate);
+  const end=new Date(endDate);
+
+  start.setHours(0,0,0,0);
+  end.setHours(23,59,59,999);
+
+  const filter={
+    clinicId:user.clinicId,
+    isDeleted:false,
+    appointmentDate:{
+      $gte:start,
+      $lte:end
+    }
+  };
+
+  if(doctorId){
+    filter.doctorId=doctorId;
+  }
+
+  if(status){
+    filter.status=status;
+  }
+
+  const appointments=await Appointment.find(filter)
+    .populate("doctorId","name specialization")
+    .populate("clinicId","name age")
+    .sort({appointmentDate:1,appointmentTime:1})
+    .limit(500)  //this limit for one time how many appointments fetched
+
+  return {
+    total:appointments.length,
+    appointments
+  };  
+}
+
 module.exports = {
   createAppointment,
   getAvailableSlots,
@@ -622,5 +666,6 @@ module.exports = {
   completeAppointment,
   checkInAppointment,
   addAppointmentNotes,
-  getDoctorSchedule
+  getDoctorSchedule,
+  getBulkAppointments
 };

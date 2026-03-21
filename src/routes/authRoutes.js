@@ -182,6 +182,13 @@ router.get(
         wrapAsync(appointmentController.addAppointmentNotes)
     );
 
+    //get appointments in bulk
+    router.get(
+        "/appointments/bulk",
+        authMiddleware,
+        wrapAsync(appointmentController.getBulkAppointments)
+    );
+
 //Doctor Break
     //create Doctor Break
     router.post(
