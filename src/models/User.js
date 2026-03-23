@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     },
     role:{
         type:String,
-        enum:["admin","user"],
+        enum:["admin","receptionist","doctor"],
         default:"admin"
     },
     clinicId:{
@@ -20,6 +20,6 @@ const userSchema = new mongoose.Schema({
         ref:"Clinic",
         required:true
     }
-}, { timestamps: true });
+},{ timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

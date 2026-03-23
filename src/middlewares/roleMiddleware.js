@@ -1,21 +1,17 @@
 //...allowedRoles means we do array of all given parametrs i.e ex ("admin","doctor","surgeon") all of thesse arry is made
+const ExpressError = require("../utils/ExpressError");
 
-
-module.exports.roleMiddleware = (...allowedRoles) => {   
+module.exports.roleMiddleware = (...allowedRoles) => {
     return (req, res, next) => {
 
+        //auth check
         if (!req.user) {
-            return res.status(401).json({
-                message: "Unauthorized"
-            });
+            throw new ExpressError("Unauthorized: Please login", 401);
         }
-
-        if (!allowedRoles.includes(req.user.role)) { //here we check if the role given by user matches any of the role in the role array
-            return res.status(403).json({
-                message: "Forbidden: Access denied"
-            });
+        //role check
+        if (!allowedRoles.includes(req.user.role)) {
+            throw new ExpressError(`Access denied for role: ${req.user.role}`,403);
         }
-
         next();
     };
 };

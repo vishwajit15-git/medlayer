@@ -21,7 +21,9 @@ const doctorBreakSchema = require("../validators/doctorBreakValidator");
 const doctorBreakController = require("../controllers/doctorBreakController");
 const doctorHolidaySchema = require("../validators/doctorHolidayValidator");
 const doctorHolidayController=require("../controllers/doctorHolidayController");
-
+const userSchema = require("../validators/userValidator");
+const userController = require("../controllers/userController");
+const clinicSettingsSchema = require("../validators/clinicSettingsValidator");
 
 router.get("/whoami", authMiddleware, (req, res) => {
     res.json({
@@ -38,6 +40,24 @@ router.post(
     "/register-clinic",
     wrapAsync(clinicController.registerClinic)
 );
+
+// Clinic Settings
+router.patch(
+  "/clinic/settings",
+  authMiddleware,
+  roleMiddleware("admin"),
+  validate(clinicSettingsSchema),
+  wrapAsync(clinicController.updateSettings)
+);
+
+    // Create User (ADMIN only)
+router.post(
+    "/users",
+    authMiddleware,
+    roleMiddleware("admin"),
+    validate(userSchema),
+    wrapAsync(userController.createUser)
+    );
     //Login as Admin to Clinic
 router.post("/login", wrapAsync(async (req, res) => {
         const { email, password } = req.body;
@@ -82,6 +102,7 @@ router.post("/doctors",
     //get Doctor
 router.get("/doctors",
     authMiddleware,
+    roleMiddleware("admin","receptionist"),
     wrapAsync(doctorController.getDoctors));
 
     //delete Doctor
@@ -91,10 +112,11 @@ router.delete(
     roleMiddleware("admin"),
     wrapAsync(doctorController.deleteDoctor)
 );
-    //get docto schedule
+    //get doctor schedule
 router.get(
     "/doctors/:id/schedule",
     authMiddleware,
+    roleMiddleware("admin","receptionist","doctor"),
     wrapAsync(appointmentController.getDoctorSchedule)
 );
 
@@ -102,13 +124,14 @@ router.get(
     //Create Patient
 router.post("/patients",
     authMiddleware,
-    roleMiddleware("admin"),
+    roleMiddleware("admin","receptionist"),
     validate(patientSchema),
     wrapAsync(patientController.createPatient));
 
     //get Patient
 router.get("/patients",
     authMiddleware,
+    roleMiddleware("admin","receptionist"),
     wrapAsync(patientController.getPatients));
 
     //delete Patient
@@ -122,6 +145,7 @@ router.delete(
 router.get(
     "/patients/search",
     authMiddleware,
+    roleMiddleware("admin","receptionist"),
     wrapAsync(patientController.searchPatient)
 );
 
@@ -131,24 +155,28 @@ router.get(
     router.post("/appointments",
         authMiddleware,
         validate(appointmentSchema),
+        roleMiddleware("admin","receptionist"),
         wrapAsync(appointmentController.createAppointment)
     );
 
     //Get all available slots
     router.get("/doctors/:id/available-slots",
         authMiddleware,
+        roleMiddleware("admin","receptionist"),
         wrapAsync(appointmentController.getAvailableSlots)
     );
 
     //cancel appointment
     router.patch("/appointments/:id/cancel",
         authMiddleware,
+        roleMiddleware("admin","receptionist"),
         wrapAsync(appointmentController.cancelAppointment)
     );
 
     //get all appointments
     router.get("/appointments",
         authMiddleware,
+        roleMiddleware("admin","receptionist"),
         wrapAsync(appointmentController.getAppointments)
     );
     
@@ -157,6 +185,7 @@ router.get(
     router.patch(
         "/appointments/:id/reschedule",
         authMiddleware,
+        roleMiddleware("admin","receptionist"),
         wrapAsync(appointmentController.rescheduleAppointment)
     );
 
@@ -164,7 +193,7 @@ router.get(
     router.patch(
         "/appointments/:id/complete",
         authMiddleware,
-        roleMiddleware("admin"),
+        roleMiddleware("doctor"),
         wrapAsync(appointmentController.completeAppointment)
     );
 
@@ -172,6 +201,7 @@ router.get(
     router.patch(
         "/appointments/:id/check-in",
         authMiddleware,
+        roleMiddleware("receptionist"),
         wrapAsync(appointmentController.checkInAppointment)
     );
 
@@ -179,6 +209,7 @@ router.get(
     router.patch(
         "/appointments/:id/notes",
         authMiddleware,
+        roleMiddleware("doctor"),
         wrapAsync(appointmentController.addAppointmentNotes)
     );
 
@@ -186,6 +217,7 @@ router.get(
     router.get(
         "/appointments/bulk",
         authMiddleware,
+        roleMiddleware("admin"),
         wrapAsync(appointmentController.getBulkAppointments)
     );
 
@@ -214,6 +246,7 @@ router.get(
     router.get(
         "/doctor-holidays",
         authMiddleware,
+        roleMiddleware("admin"),
         wrapAsync(doctorHolidayController.getHoliday)
     );
 

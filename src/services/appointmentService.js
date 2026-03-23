@@ -54,6 +54,12 @@ const generateSlots = (start, end) => {
   return slots;
 };
 
+//helper function get days of week
+const getDayofWeek=(date)=>{
+  const days=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+  return days[new Date(date).getDay()];
+};
+
 
 //CREATE APPOINTMENT
 const createAppointment = async (data, user) => {
@@ -72,6 +78,15 @@ const createAppointment = async (data, user) => {
   const normalizedDate = new Date(appointmentDate);
   normalizedDate.setHours(0, 0, 0, 0);
 
+   //fetch clinic for checking if it lies in/outside the clinic working hours
+  const clinic=await Clinic.findById(user.clinicId);
+
+  const day=getDayofWeek(normalizedDate);
+
+  if(!clinic.settings.workingDays.includes(day)){
+    throw new ExpressError("Clinic closed on this day",400);
+  }
+
   // Verify doctor belongs to clinic
   const doctor = await Doctor.findOne({
     _id: doctorId,
@@ -82,9 +97,6 @@ const createAppointment = async (data, user) => {
   if (!doctor) {
     throw new ExpressError("Doctor not found in this clinic", 404);
   }
-
-  //fetch clinic for checking if it lies in/outside the clinic working hours
-  const clinic=await Clinic.findById(user.clinicId);
 
   if(!clinic || !clinic.workingHours){
     throw new ExpressError("Clinic working hours not configured",400);
@@ -210,6 +222,18 @@ const getAvailableSlots = async (doctorId, date, user) => {
   const normalizedDate = new Date(date);
   normalizedDate.setHours(0, 0, 0, 0);
 
+  const clinic = await Clinic.findById(user.clinicId);
+
+  const day = getDayofWeek(normalizedDate);
+
+  if (!clinic.settings.workingDays.includes(day)) {
+    return {
+      doctorId,
+      date,
+      availableSlots: [],
+      message: "Clinic closed"
+    };
+  }
 
   //Fetch doctor breaks 
   const breaks = await DoctorBreak.find({
@@ -260,8 +284,6 @@ const getAvailableSlots = async (doctorId, date, user) => {
       current += SLOT_SIZE;
     }
   }
-
-  const clinic = await Clinic.findById(user.clinicId);
 
   const clinicStart = toMinutes(clinic.workingHours.startTime);
   const clinicEnd = toMinutes(clinic.workingHours.endTime);
@@ -421,12 +443,12 @@ const rescheduleAppointment = async (appointmentId, data, user) => {
   });
 
   //cannot reschedule passed appointments
-  if(isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
-    throw new ExpressError("Cannot reschedule Passed Appointment",400);
-  }
-
   if (!appointment) {
     throw new ExpressError("Appointment not found", 404);
+  }
+  
+  if(isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
+    throw new ExpressError("Cannot reschedule Passed Appointment",400);
   }
 
   if (appointment.status !== "BOOKED") {
@@ -550,6 +572,18 @@ const getDoctorSchedule = async (doctorId, date, user) => {
   //normalize date
   const normalizedDate = new Date(date);
   normalizedDate.setHours(0, 0, 0, 0);
+  const clinic = await Clinic.findById(user.clinicId);
+
+  const day = getDayofWeek(normalizedDate);
+
+  if (!clinic.settings.workingDays.includes(day)) {
+    return {
+      doctorId,
+      date,
+      schedule: [],
+      message: "Clinic closed"
+    };
+  }  
 
   //check holiday (EARLY EXIT)
   const holiday = await DoctorHoliday.findOne({
@@ -588,7 +622,6 @@ const getDoctorSchedule = async (doctorId, date, user) => {
   }
 
   //apply CLINIC WORKING HOURS
-  const clinic = await Clinic.findById(user.clinicId);
 
   if (!clinic || !clinic.workingHours) {
     throw new ExpressError("Clinic working hours not configured", 400);

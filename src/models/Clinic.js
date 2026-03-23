@@ -34,6 +34,12 @@ const clinicSchema = new mongoose.Schema({
             type: String,
             default: "18:00"
         }
+    },
+    settings:{
+        workingDays:{
+            type:[String],
+            default:["MON","TUE","WED","THU","FRI"]
+        }
     }
 
 }, { timestamps: true });

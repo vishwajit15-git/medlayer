@@ -57,6 +57,30 @@ const registerClinic = async (data) => {
     }
 };
 
+const updateClinicSettings = async (data, user) => {
+
+  if (user.role !== "admin") {
+    throw new ExpressError("Only admin can update clinic settings", 403);
+  }
+
+  const clinic = await Clinic.findById(user.clinicId);
+
+  if (!clinic) {
+    throw new ExpressError("Clinic not found", 404);
+  }
+
+  clinic.settings = clinic.settings || {};
+
+  if (data.workingDays) {
+    clinic.settings.workingDays = data.workingDays;
+  }
+
+  await clinic.save();
+
+  return clinic.settings;
+};
+
 module.exports = {
-    registerClinic
+    registerClinic,
+    updateClinicSettings
 };
