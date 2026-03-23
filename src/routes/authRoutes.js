@@ -24,6 +24,7 @@ const doctorHolidayController=require("../controllers/doctorHolidayController");
 const userSchema = require("../validators/userValidator");
 const userController = require("../controllers/userController");
 const clinicSettingsSchema = require("../validators/clinicSettingsValidator");
+const auditController=require("../controllers/auditLogController");
 
 router.get("/whoami", authMiddleware, (req, res) => {
     res.json({
@@ -258,6 +259,14 @@ router.get(
         wrapAsync(doctorHolidayController.deleteHoliday)
     );
 
+
+//Audit Log
+    router.get(
+        "/audit-logs",
+        authMiddleware,
+        roleMiddleware("admin"),
+        auditController.getLogs
+    );
 
 
 // router.get("/profile",authMiddleware,(req,res)=>{

@@ -9,6 +9,7 @@ const { date } = require("joi");
 const { all } = require("../routes/authRoutes");
 const appointmentSchema = require("../validators/appointmentValidator");
 const Clinic = require("../models/Clinic");
+const {logAction}=require("./auditLogService");
 
 //Helper function:check if it is past appointment
 const isPastAppointment=(date,time)=>{
@@ -186,6 +187,14 @@ const createAppointment = async (data, user) => {
       appointmentTime
     });
 
+    //action i.e done
+    await logAction({
+      user,
+      action:"CREATE_APPOINTMENT",
+      entity:"Appointment",
+      entityId:appointment._id
+    });
+
     return appointment;
 
   } catch (err) {
@@ -352,7 +361,15 @@ const cancelAppointment = async (appointmentId, user) => {
   appointment.status = "CANCELLED";
   await appointment.save();
 
-  return appointment;
+  //action i.e done
+    await logAction({
+      user,
+      action:"CANCEL_APPOINTMENT",
+      entity:"Appointment",
+      entityId:appointment._id
+    });
+
+    return appointment;
 };
 
 
@@ -525,6 +542,15 @@ const checkInAppointment=async(id,user)=>{
   appointment.status="CHECKED_IN";
 
   await appointment.save();
+
+  //action i.e done
+    await logAction({
+      user,
+      action:"CHECKIN_APPOINTMENT",
+      entity:"Appointment",
+      entityId:appointment._id
+    });
+
   return appointment;
 }
 
@@ -552,6 +578,13 @@ const addAppointmentNotes=async (id,data,user)=>{
 
   appointment.notes=notes.trim();
   await appointment.save();
+
+  await logAction({
+    user,
+    action: "ADD_NOTES",
+    entity: "Appointment",
+    entityId: appointment._id
+  });
 
   return appointment;
 }
