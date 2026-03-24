@@ -25,6 +25,7 @@ const userSchema = require("../validators/userValidator");
 const userController = require("../controllers/userController");
 const clinicSettingsSchema = require("../validators/clinicSettingsValidator");
 const auditController=require("../controllers/auditLogController");
+const permit=require("../middlewares/permissionMiddleware");
 
 router.get("/whoami", authMiddleware, (req, res) => {
     res.json({
@@ -46,7 +47,7 @@ router.post(
 router.patch(
   "/clinic/settings",
   authMiddleware,
-  roleMiddleware("admin"),
+  permit("UPDATE_CLINIC"),
   validate(clinicSettingsSchema),
   wrapAsync(clinicController.updateSettings)
 );
@@ -55,7 +56,7 @@ router.patch(
 router.post(
     "/users",
     authMiddleware,
-    roleMiddleware("admin"),
+    permit("CREATE_USER"),
     validate(userSchema),
     wrapAsync(userController.createUser)
     );
@@ -96,28 +97,28 @@ router.post("/login", wrapAsync(async (req, res) => {
     //Create Doctor
 router.post("/doctors",
     authMiddleware,
-    roleMiddleware("admin"),
+    permit("CREATE_DOCTOR"),
     validate(doctorSchema),
     wrapAsync(doctorController.createDoctor));
 
     //get Doctor
 router.get("/doctors",
     authMiddleware,
-    roleMiddleware("admin","receptionist"),
+    permit("VIEW_DOCTOR"),
     wrapAsync(doctorController.getDoctors));
 
     //delete Doctor
 router.delete(
     "/doctors/:id",
     authMiddleware,
-    roleMiddleware("admin"),
+    permit("DELETE_DOCTOR"),
     wrapAsync(doctorController.deleteDoctor)
 );
     //get doctor schedule
 router.get(
     "/doctors/:id/schedule",
     authMiddleware,
-    roleMiddleware("admin","receptionist","doctor"),
+    permit("VIEW_DOCTOR_SCHEDULE"),
     wrapAsync(appointmentController.getDoctorSchedule)
 );
 
@@ -125,28 +126,28 @@ router.get(
     //Create Patient
 router.post("/patients",
     authMiddleware,
-    roleMiddleware("admin","receptionist"),
+    permit("CREATE_PATIENT"),
     validate(patientSchema),
     wrapAsync(patientController.createPatient));
 
     //get Patient
 router.get("/patients",
     authMiddleware,
-    roleMiddleware("admin","receptionist"),
+    permit("VIEW_PATIENT"),
     wrapAsync(patientController.getPatients));
 
     //delete Patient
 router.delete(
     "/patients/:id",
     authMiddleware,
-    roleMiddleware("admin"),
+    permit("DELETE_PATIENT"),
     wrapAsync(patientController.deletePatient)
 );
 
 router.get(
     "/patients/search",
     authMiddleware,
-    roleMiddleware("admin","receptionist"),
+    permit("VIEW_PATIENT"),
     wrapAsync(patientController.searchPatient)
 );
 
@@ -156,28 +157,28 @@ router.get(
     router.post("/appointments",
         authMiddleware,
         validate(appointmentSchema),
-        roleMiddleware("admin","receptionist"),
+        permit("CREATE_APPOINTMENT"),
         wrapAsync(appointmentController.createAppointment)
     );
 
     //Get all available slots
     router.get("/doctors/:id/available-slots",
         authMiddleware,
-        roleMiddleware("admin","receptionist"),
+        permit("VIEW_AVAILABLE_SLOTS"),
         wrapAsync(appointmentController.getAvailableSlots)
     );
 
     //cancel appointment
     router.patch("/appointments/:id/cancel",
         authMiddleware,
-        roleMiddleware("admin","receptionist"),
+        permit("CANCEL_APPOINTMENT"),
         wrapAsync(appointmentController.cancelAppointment)
     );
 
     //get all appointments
     router.get("/appointments",
         authMiddleware,
-        roleMiddleware("admin","receptionist"),
+        permit("VIEW_APPOINTMENTS"),
         wrapAsync(appointmentController.getAppointments)
     );
     
@@ -186,7 +187,7 @@ router.get(
     router.patch(
         "/appointments/:id/reschedule",
         authMiddleware,
-        roleMiddleware("admin","receptionist"),
+        permit("RESCHEDULE_APPOINTMENT"),
         wrapAsync(appointmentController.rescheduleAppointment)
     );
 
@@ -194,7 +195,7 @@ router.get(
     router.patch(
         "/appointments/:id/complete",
         authMiddleware,
-        roleMiddleware("doctor"),
+        permit("COMPLETE_APPOINTMENT"),
         wrapAsync(appointmentController.completeAppointment)
     );
 
@@ -202,7 +203,7 @@ router.get(
     router.patch(
         "/appointments/:id/check-in",
         authMiddleware,
-        roleMiddleware("receptionist"),
+        permit("CHECKIN_APPOINTMENT"),
         wrapAsync(appointmentController.checkInAppointment)
     );
 
@@ -210,7 +211,7 @@ router.get(
     router.patch(
         "/appointments/:id/notes",
         authMiddleware,
-        roleMiddleware("doctor"),
+        permit("ADD_NOTES"),
         wrapAsync(appointmentController.addAppointmentNotes)
     );
 
@@ -218,7 +219,7 @@ router.get(
     router.get(
         "/appointments/bulk",
         authMiddleware,
-        roleMiddleware("admin"),
+        permit("VIEW_BULK_APPOINTMENTS"),
         wrapAsync(appointmentController.getBulkAppointments)
     );
 
@@ -227,7 +228,7 @@ router.get(
     router.post(
         "/doctor-breaks",
         authMiddleware,
-        roleMiddleware("admin"),
+        permit("CREATE_DOCTOR_BREAK"),
         validate(doctorBreakSchema),
         wrapAsync(doctorBreakController.createBreak)
     );
@@ -238,7 +239,7 @@ router.get(
     router.post(
         "/doctor-holidays",
         authMiddleware,
-        roleMiddleware("admin"),
+        permit("CREATE_HOLIDAY"),
         validate(doctorHolidaySchema),
         wrapAsync(doctorHolidayController.createHoliday)
     );  
@@ -247,7 +248,7 @@ router.get(
     router.get(
         "/doctor-holidays",
         authMiddleware,
-        roleMiddleware("admin"),
+        permit("VIEW_HOLIDAY"),
         wrapAsync(doctorHolidayController.getHoliday)
     );
 
@@ -255,7 +256,7 @@ router.get(
     router.delete(
         "/doctor-holidays/:id",
         authMiddleware,
-        roleMiddleware("admin"),
+        permit("DELETE_HOLIDAY"),
         wrapAsync(doctorHolidayController.deleteHoliday)
     );
 
@@ -264,7 +265,7 @@ router.get(
     router.get(
         "/audit-logs",
         authMiddleware,
-        roleMiddleware("admin"),
+        permit("VIEW_AUDIT_LOGS"),
         auditController.getLogs
     );
 

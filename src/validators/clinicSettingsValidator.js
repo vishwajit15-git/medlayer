@@ -1,10 +1,14 @@
-const Joi = require("joi");
+const Joi=require("joi");
 
-const clinicSettingsSchema = Joi.object({
-  workingDays: Joi.array()
-    .items(Joi.string().valid("MON","TUE","WED","THU","FRI","SAT","SUN"))
-    .min(1)
-    .required()
-}).unknown(false);
-
-module.exports = clinicSettingsSchema;
+const clinicSettingsSchema=Joi.object({
+  workingHours:Joi.object({
+    startTime:Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
+    endTime:Joi.string().pattern(/^\d{2}:\d{2}$/).required()
+  }),
+  settings:Joi.object({
+    workingDays: Joi.array()
+      .items(Joi.string().valid("SUN","MON","TUE","WED","THU","FRI","SAT"))
+      .min(1)
+  })
+}).min(1);
+module.exports =clinicSettingsSchema;
