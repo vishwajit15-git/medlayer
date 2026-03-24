@@ -10,14 +10,14 @@ const registerClinic = async (req, res) => {
 };
 
 const updateSettings = async (req, res) => {
-  const settings = await clinicService.updateClinicSettings(
+  const clinic = await clinicService.updateClinicSettings(
     req.body,
     req.user
   );
 
   return res.status(200).json({
     message: "Clinic settings updated",
-    settings
+    clinic
   });
 };
 

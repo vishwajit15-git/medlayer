@@ -58,26 +58,36 @@ const registerClinic = async (data) => {
 };
 
 const updateClinicSettings = async (data, user) => {
-
-  if (user.role !== "admin") {
-    throw new ExpressError("Only admin can update clinic settings", 403);
-  }
-
   const clinic = await Clinic.findById(user.clinicId);
 
-  if (!clinic) {
+  if(!clinic) {
     throw new ExpressError("Clinic not found", 404);
   }
 
-  clinic.settings = clinic.settings || {};
+  if(data.workingHours){
 
-  if (data.workingDays) {
-    clinic.settings.workingDays = data.workingDays;
+    const { startTime, endTime }=data.workingHours;
+
+    if(!startTime || !endTime){
+      throw new ExpressError("Working hours required", 400);
+    }
+
+    if (startTime >= endTime) {
+      throw new ExpressError("Invalid working hours", 400);
+    }
+
+    clinic.workingHours.startTime = startTime;
+    clinic.workingHours.endTime = endTime;
+  }
+
+  if(data.settings && data.settings.workingDays) {
+    clinic.settings = clinic.settings || {};
+    clinic.settings.workingDays = data.settings.workingDays;
   }
 
   await clinic.save();
 
-  return clinic.settings;
+  return clinic;
 };
 
 module.exports = {

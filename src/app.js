@@ -1,15 +1,15 @@
 const express = require("express");
 const routes = require("./routes");
-const {errorMiddleware} = require("./middlewares/errorMiddleware");
+const { errorMiddleware } = require("./middlewares/errorMiddleware");
+const sanitize = require("./middlewares/sanitizeMiddleware");
 
 const app = express();
 
 app.use(express.json());
+app.use(sanitize);
 
-// prefix all APIs
 app.use("/", routes);
 
-// error handler at bottom
 app.use(errorMiddleware);
 
 module.exports = app;
