@@ -37,13 +37,13 @@ router.get("/whoami", authMiddleware, (req, res) => {
 
 //CLINIC(Admin)
 
-    //create Clinic
+    //create ClinicD
 router.post(
     "/register-clinic",
     wrapAsync(clinicController.registerClinic)
 );
 
-// Clinic Settings
+// Clinic Settings D
 router.patch(
   "/clinic/settings",
   authMiddleware,
@@ -52,15 +52,15 @@ router.patch(
   wrapAsync(clinicController.updateSettings)
 );
 
-    // Create User (ADMIN only)
-router.post(
+    // Create User (ADMIN only) D
+router.post(  
     "/users",
     authMiddleware,
     permit("CREATE_USER"),
     validate(userSchema),
     wrapAsync(userController.createUser)
-    );
-    //Login as Admin to Clinic
+    ); 
+    //Login as Admin to Clinic D
 router.post("/login", wrapAsync(async (req, res) => {
         const { email, password } = req.body;
 
@@ -94,14 +94,14 @@ router.post("/login", wrapAsync(async (req, res) => {
 
 
 //Doctors 
-    //Create Doctor
+    //Create Doctor D
 router.post("/doctors",
     authMiddleware,
     permit("CREATE_DOCTOR"),
     validate(doctorSchema),
     wrapAsync(doctorController.createDoctor));
 
-    //get Doctor
+    //get Doctor  D
 router.get("/doctors",
     authMiddleware,
     permit("VIEW_DOCTOR"),
@@ -114,7 +114,7 @@ router.delete(
     permit("DELETE_DOCTOR"),
     wrapAsync(doctorController.deleteDoctor)
 );
-    //get doctor schedule
+    //get doctor schedule D
 router.get(
     "/doctors/:id/schedule",
     authMiddleware,
@@ -123,14 +123,14 @@ router.get(
 );
 
 //Patient
-    //Create Patient
+    //Create Patient D
 router.post("/patients",
     authMiddleware,
     permit("CREATE_PATIENT"),
     validate(patientSchema),
     wrapAsync(patientController.createPatient));
 
-    //get Patient
+    //get Patient  D
 router.get("/patients",
     authMiddleware,
     permit("VIEW_PATIENT"),
@@ -153,7 +153,7 @@ router.get(
 
 
 //Appointment
-    //Create appointment
+    //Create appointment D
     router.post("/appointments",
         authMiddleware,
         validate(appointmentSchema),
@@ -161,28 +161,28 @@ router.get(
         wrapAsync(appointmentController.createAppointment)
     );
 
-    //Get all available slots
+    //Get all available slots D
     router.get("/doctors/:id/available-slots",
         authMiddleware,
         permit("VIEW_AVAILABLE_SLOTS"),
         wrapAsync(appointmentController.getAvailableSlots)
     );
 
-    //cancel appointment
+    //cancel appointment D
     router.patch("/appointments/:id/cancel",
         authMiddleware,
         permit("CANCEL_APPOINTMENT"),
         wrapAsync(appointmentController.cancelAppointment)
     );
 
-    //get all appointments
+    //get all appointments D
     router.get("/appointments",
         authMiddleware,
         permit("VIEW_APPOINTMENTS"),
         wrapAsync(appointmentController.getAppointments)
     );
     
-    //Reschedule appointments
+    //Reschedule appointments D
 
     router.patch(
         "/appointments/:id/reschedule",
@@ -191,7 +191,7 @@ router.get(
         wrapAsync(appointmentController.rescheduleAppointment)
     );
 
-    //Appointment Completed
+    //Appointment Completed D
     router.patch(
         "/appointments/:id/complete",
         authMiddleware,
@@ -199,7 +199,7 @@ router.get(
         wrapAsync(appointmentController.completeAppointment)
     );
 
-    //Patient Check in
+    //Patient Check in D
     router.patch(
         "/appointments/:id/check-in",
         authMiddleware,
@@ -207,7 +207,7 @@ router.get(
         wrapAsync(appointmentController.checkInAppointment)
     );
 
-    //Appointment Noted Adding
+    //Appointment Noted Adding D
     router.patch(
         "/appointments/:id/notes",
         authMiddleware,
@@ -215,7 +215,7 @@ router.get(
         wrapAsync(appointmentController.addAppointmentNotes)
     );
 
-    //get appointments in bulk
+    //get appointments in bulk D
     router.get(
         "/appointments/bulk",
         authMiddleware,
@@ -224,7 +224,7 @@ router.get(
     );
 
 //Doctor Break
-    //create Doctor Break
+    //create Doctor Break 
     router.post(
         "/doctor-breaks",
         authMiddleware,
