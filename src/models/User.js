@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"Clinic",
         required:true
+    },
+    refreshToken:{
+        type:String,
+        default:null
     }
 },{ timestamps: true });
 

@@ -52,6 +52,12 @@ router.patch(
   wrapAsync(clinicController.updateSettings)
 );
 
+//refresh acccess token
+router.post(
+    "/refresh",
+    clinicController.refreshToken
+)
+
     // Create User (ADMIN only) D
 router.post(  
     "/users",
@@ -62,36 +68,58 @@ router.post(
     ); 
     //Login as Admin to Clinic D
 router.post("/login", wrapAsync(async (req, res) => {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
-        if (!email || !password) {
-            throw new ExpressError("Email and password required", 400);
-        }
+    if(!email || !password){
+        throw new ExpressError("Email and password required", 400);
+    }
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            throw new ExpressError("Invalid Credentials", 401);
-        }
+    const user=await User.findOne({email});
 
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) {
-            throw new ExpressError("Invalid Credentials", 401);
-        }
+    if(!user) {
+        throw new ExpressError("Invalid Credentials", 401);
+    }
 
-        const token = jwt.sign(
-            {
-                id: user._id,
-                clinicId: user.clinicId,
-                role: user.role
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        );
+    const isMatch=await bcrypt.compare(password,user.passwordHash);
 
-        return res.status(200).json({ token });
-    }));
+    if(!isMatch){
+        throw new ExpressError("Invalid Credentials", 401);
+    }
 
+    const payload={
+        id:user._id,
+        clinicId:user.clinicId,
+        role:user.role
+    };
 
+    const accessToken=jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        {expiresIn:"15m"}   // short-lived
+    );
+
+    const refreshToken =jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        {expiresIn: "7d"}    // long-lived
+    );
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    return res.status(200).json({
+        message: "Login successful",
+        accessToken,
+        refreshToken
+    });
+}));
+
+//logout
+router.post(
+    "/logout",
+    authMiddleware,
+    clinicController.logout
+);
 
 //Doctors 
     //Create Doctor D
