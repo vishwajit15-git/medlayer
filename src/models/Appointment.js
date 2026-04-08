@@ -55,7 +55,7 @@ appointmentSchema.index(
   {
     unique: true,
     partialFilterExpression: {
-      status: "BOOKED"
+      status: { $in: ["BOOKED", "CHECKED_IN", "COMPLETED"] }
     }
   }
 );

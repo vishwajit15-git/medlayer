@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const routes = require("./routes");
 const { errorMiddleware } = require("./middlewares/errorMiddleware");
 const sanitize = require("./middlewares/sanitizeMiddleware");
@@ -10,6 +11,7 @@ const swaggerSpec = require("./config/swagger");
 const app = express();
 
 app.use(express.json());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true })); // allow Vite frontend
 app.use(sanitize);
 
 app.use(rateLimiter);

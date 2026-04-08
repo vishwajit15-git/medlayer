@@ -42,7 +42,7 @@ const registerClinic =async (data) => {
         const accessToken=jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            {expiresIn:"15m"} // short-lived
+            {expiresIn:"3h"} // short-lived
         );
 
         const refreshToken = jwt.sign(
@@ -100,7 +100,7 @@ const refreshAccessToken = async (refreshToken) => {
     };
 
     const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: "15m"
+        expiresIn: "3h"
     });
 
     const newRefreshToken = jwt.sign(payload, process.env.JWT_SECRET, {

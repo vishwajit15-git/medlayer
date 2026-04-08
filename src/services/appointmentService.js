@@ -176,6 +176,20 @@ const createAppointment = async (data, user) => {
     throw new ExpressError("Patient not found in this clinic", 404);
   }
 
+  //Explicit duplicate slot check (belt-and-suspenders with DB index)
+  const existingAppointment = await Appointment.findOne({
+    doctorId,
+    clinicId: user.clinicId,
+    appointmentDate: normalizedDate,
+    appointmentTime,
+    isDeleted: false,
+    status: { $in: ["BOOKED", "CHECKED_IN", "COMPLETED"] }
+  });
+
+  if (existingAppointment) {
+    throw new ExpressError("This time slot is already booked for this doctor", 409);
+  }
+
   //Create appointment (race safe via DB index)
   try {
 
@@ -308,7 +322,7 @@ const getAvailableSlots = async (doctorId, date, user) => {
     clinicId: user.clinicId,
     appointmentDate: normalizedDate,
     isDeleted: false,
-    status: "BOOKED"
+    status: { $in: ["BOOKED", "CHECKED_IN", "COMPLETED"] }
   }).select("appointmentTime -_id");
 
   const bookedSet = new Set(
@@ -691,7 +705,7 @@ const getDoctorSchedule = async (doctorId, date, user) => {
     clinicId: user.clinicId,
     appointmentDate: normalizedDate,
     isDeleted: false,
-    status: "BOOKED"
+    status: { $in: ["BOOKED", "CHECKED_IN", "COMPLETED"] }
   }).select("appointmentTime -_id");
 
   const bookedSet = new Set(

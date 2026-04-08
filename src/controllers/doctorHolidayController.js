@@ -2,20 +2,20 @@ const doctorHolidayService = require("../services/doctorHolidayService");
 
 const createHoliday = async (req, res) => {
 
-    const holiday = await doctorHolidayService.createHoliday(
+    const result = await doctorHolidayService.createHoliday(
         req.body,
         req.user
     );
 
     return res.status(201).json({
-        message: "Holiday added successfully",
-        holiday
+        message: `${result.totalCreated} holiday(s) added successfully${result.totalSkipped > 0 ? `, ${result.totalSkipped} already existed` : ''}`,
+        ...result
     });
 };
 
 const getHoliday = async (req, res) => {
 
-    const holidays = await doctorHolidayService.getHolidays(
+    const holidays = await doctorHolidayService.getHoliday(
         req.query,
         req.user
     );

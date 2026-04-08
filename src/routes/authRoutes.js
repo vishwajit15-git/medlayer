@@ -95,7 +95,7 @@ router.post("/login", wrapAsync(async (req, res) => {
     const accessToken=jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        {expiresIn:"15m"}   // short-lived
+        {expiresIn:"3h"}   // short-lived
     );
 
     const refreshToken =jwt.sign(

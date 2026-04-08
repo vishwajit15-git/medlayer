@@ -1,9 +1,9 @@
 const PERMISSIONS={
   CREATE_APPOINTMENT:["admin", "receptionist"],
     CANCEL_APPOINTMENT:["admin", "receptionist"],
-    CHECKIN_APPOINTMENT:["receptionist"],
-    COMPLETE_APPOINTMENT:["doctor"],
-    ADD_NOTES:["doctor"],
+    CHECKIN_APPOINTMENT:["admin", "receptionist", "doctor"],
+    COMPLETE_APPOINTMENT:["admin", "receptionist", "doctor"],
+    ADD_NOTES:["admin", "receptionist", "doctor"],
 
     VIEW_APPOINTMENTS: ["admin", "receptionist"],
     VIEW_BULK_APPOINTMENTS: ["admin"],
