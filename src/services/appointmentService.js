@@ -201,12 +201,18 @@ const createAppointment = async (data, user) => {
       appointmentTime
     });
 
+    // Populate for log description
+    const populatedAppt = await Appointment.findById(appointment._id)
+      .populate("patientId", "name")
+      .populate("doctorId", "name");
+
     //action i.e done
     await logAction({
       user,
-      action:"CREATE_APPOINTMENT",
-      entity:"Appointment",
-      entityId:appointment._id
+      action: "CREATE_APPOINTMENT",
+      entity: "Appointment",
+      entityId: appointment._id,
+      description: `Booked appointment for ${populatedAppt.patientId.name} with Dr. ${populatedAppt.doctorId.name} at ${appointmentTime}`
     });
 
     return appointment;
@@ -376,11 +382,14 @@ const cancelAppointment = async (appointmentId, user) => {
   await appointment.save();
 
   //action i.e done
+    const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
+    
     await logAction({
       user,
       action:"CANCEL_APPOINTMENT",
       entity:"Appointment",
-      entityId:appointment._id
+      entityId:appointment._id,
+      description: `Cancelled appointment for ${populatedAppt.patientId.name}`
     });
 
     return appointment;
@@ -496,6 +505,18 @@ const rescheduleAppointment = async (appointmentId, data, user) => {
 
     await appointment.save();
 
+    const populatedAppt = await Appointment.findById(appointment._id)
+      .populate("patientId", "name")
+      .populate("doctorId", "name");
+
+    await logAction({
+      user,
+      action: "RESCHEDULE_APPOINTMENT",
+      entity: "Appointment",
+      entityId: appointment._id,
+      description: `Rescheduled ${populatedAppt.patientId.name}'s appointment with Dr. ${populatedAppt.doctorId.name} to ${normalizedDate.toDateString()} at ${appointmentTime}`
+    });
+
     return appointment;
 
   } catch (err) {
@@ -534,6 +555,15 @@ const completeAppointment=async(id,user)=>{
   appointment.status="COMPLETED";
   await appointment.save();
 
+  const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
+  await logAction({
+    user,
+    action: "COMPLETE_APPOINTMENT",
+    entity: "Appointment",
+    entityId: appointment._id,
+    description: `Marked appointment for ${populatedAppt.patientId.name} as COMPLETED`
+  });
+
   return appointment;
 }
 
@@ -558,11 +588,13 @@ const checkInAppointment=async(id,user)=>{
   await appointment.save();
 
   //action i.e done
+    const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
     await logAction({
       user,
       action:"CHECKIN_APPOINTMENT",
       entity:"Appointment",
-      entityId:appointment._id
+      entityId:appointment._id,
+      description: `Checked in patient ${populatedAppt.patientId.name}`
     });
 
   return appointment;
@@ -597,7 +629,8 @@ const addAppointmentNotes=async (id,data,user)=>{
     user,
     action: "ADD_NOTES",
     entity: "Appointment",
-    entityId: appointment._id
+    entityId: appointment._id,
+    description: `Added clinical notes for ${appointment.notes.substring(0, 20)}...`
   });
 
   return appointment;

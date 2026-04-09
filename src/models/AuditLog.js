@@ -27,6 +27,10 @@ const auditLogSchema=new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         required:true
     },
+    description:{
+        type:String,
+        required:false
+    },
     meta:{
         type:Object,   //Optiona extra info
         default:{}

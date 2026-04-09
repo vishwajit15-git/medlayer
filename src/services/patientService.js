@@ -16,7 +16,7 @@ const deletePatient=async(id,user)=>{
 
 const searchPatient=async(query,user)=>{
     //check if not user find or we search for user with no input
-    if(!query || query.trim().length<2){
+    if(!query || query.trim().length<1){
         return [];
     }
 

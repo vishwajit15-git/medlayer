@@ -69,6 +69,20 @@ const createHoliday = async (data, user) => {
 const getHoliday = async (query, user) => {
     const { doctorId } = query;
 
+    // auto delete past holidays
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Soft delete any holidays where the date is strictly less than today
+    await DoctorHoliday.updateMany(
+        {
+            clinicId: user.clinicId,
+            isDeleted: false,
+            date: { $lt: today }
+        },
+        { $set: { isDeleted: true } }
+    );
+
     const filter = {
         clinicId: user.clinicId,
         isDeleted: false
@@ -98,8 +112,30 @@ const deleteHoliday = async (id, user) => {
     return holiday;
 };
 
+const bulkDeleteHolidays = async (ids, user) => {
+    if (!Array.isArray(ids) || ids.length === 0) {
+        throw new ExpressError("No holiday IDs provided", 400);
+    }
+
+    const result = await DoctorHoliday.updateMany(
+        {
+            _id: { $in: ids },
+            clinicId: user.clinicId,
+            isDeleted: false
+        },
+        { $set: { isDeleted: true } }
+    );
+
+    if (result.modifiedCount === 0) {
+        throw new ExpressError("No matching holidays found", 404);
+    }
+
+    return { deletedCount: result.modifiedCount };
+};
+
 module.exports = {
     createHoliday,
     getHoliday,
-    deleteHoliday
+    deleteHoliday,
+    bulkDeleteHolidays
 };

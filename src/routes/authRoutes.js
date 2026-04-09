@@ -288,6 +288,14 @@ router.get(
         wrapAsync(doctorHolidayController.deleteHoliday)
     );
 
+    //bulk delete holidays
+    router.post(
+        "/doctor-holidays/bulk-delete",
+        authMiddleware,
+        permit("DELETE_HOLIDAY"),
+        wrapAsync(doctorHolidayController.bulkDeleteHolidays)
+    );
+
 
 //Audit Log
     router.get(

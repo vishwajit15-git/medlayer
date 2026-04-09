@@ -27,12 +27,13 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
   const [currentMonth, setCurrentMonth] = useState(initialDate);
   const containerRef = useRef(null);
   const popupRef = useRef(null);
-  const [coords, setCoords] = useState({ top: -9999, left: -9999 });
+  const [coords, setCoords] = useState({ top: -9999, left: -9999, right: undefined });
 
   // Update Coords when opening (useLayoutEffect prevents flicker)
   useLayoutEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const calWidth = 310; // calendar min-width (280) + padding (30)
       if (placement === 'left') {
         setCoords({
           top: rect.top + rect.height / 2 - 150,
@@ -44,9 +45,11 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
           left: rect.right + 16
         });
       } else {
+        // Right-align calendar's right edge to trigger's right edge
         setCoords({
           top: rect.bottom + 8,
-          left: rect.left
+          left: undefined,
+          right: window.innerWidth - rect.right
         });
       }
     }
@@ -139,10 +142,12 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
         <div ref={popupRef} style={{
           position: 'fixed',
           top: `${coords.top}px`,
-          left: `${coords.left}px`,
+          ...(coords.right !== undefined
+            ? { right: `${coords.right}px` }
+            : { left: `${coords.left}px` }),
           minWidth: '280px',
           width: 'max-content',
-          background: '#343438', /* Dark gray from image */
+          background: '#343438',
           borderRadius: '16px',
           padding: '1.25rem',
           boxShadow: '0 10px 25px rgba(0,0,0,0.5)',

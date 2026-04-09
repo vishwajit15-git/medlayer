@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api/axios';
-import { Calendar, Clock, AlertTriangle, Coffee, Palmtree, Plus } from 'lucide-react';
+import { Calendar, Clock, AlertTriangle, Coffee, Palmtree, Plus, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomSelect from '../components/CustomSelect';
@@ -22,6 +22,11 @@ const DoctorSchedule = () => {
   const [holidayStart, setHolidayStart] = useState('');
   const [holidayEnd, setHolidayEnd] = useState('');
 
+  // Manage Holidays States
+  const [holidays, setHolidays] = useState([]);
+  const [showManageHolidays, setShowManageHolidays] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ show: false, range: null, mode: 'ENTIRE' });
+  const [selectedDaysForDelete, setSelectedDaysForDelete] = useState([]);
   const fetchDoctors = async () => {
     try {
       const res = await api.get('/auth/doctors');
@@ -54,6 +59,62 @@ const DoctorSchedule = () => {
     fetchSchedule();
   }, [fetchSchedule]);
 
+  const fetchHolidays = useCallback(async () => {
+    if (!selectedDoctor) return;
+    try {
+      const res = await api.get(`/auth/doctor-holidays?doctorId=${selectedDoctor}`);
+      const list = res.data.holidays || [];
+      
+      const grouped = [];
+      let currentGroup = [];
+
+      list.forEach((h) => {
+        if (currentGroup.length === 0) {
+          currentGroup.push(h);
+        } else {
+          const prevDate = new Date(currentGroup[currentGroup.length - 1].date);
+          const currDate = new Date(h.date);
+          const diff = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24));
+          if (diff === 1) {
+            currentGroup.push(h);
+          } else {
+            grouped.push(currentGroup);
+            currentGroup = [h];
+          }
+        }
+      });
+      if (currentGroup.length > 0) grouped.push(currentGroup);
+      setHolidays(grouped);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [selectedDoctor]);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, [fetchHolidays]);
+
+  const handleBulkDelete = async () => {
+    try {
+      let idsToDelete = [];
+      if (deleteModal.mode === 'ENTIRE') {
+        idsToDelete = deleteModal.range.map(h => h._id);
+      } else {
+        idsToDelete = selectedDaysForDelete;
+      }
+      
+      if (idsToDelete.length === 0) return alert('No days selected');
+
+      await api.post('/auth/doctor-holidays/bulk-delete', { ids: idsToDelete });
+      setDeleteModal({ show: false, range: null, mode: 'ENTIRE' });
+      setSelectedDaysForDelete([]);
+      fetchSchedule();
+      fetchHolidays();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete holidays');
+    }
+  };
+
   const handleOverrideSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -76,6 +137,7 @@ const DoctorSchedule = () => {
       setHolidayStart('');
       setHolidayEnd('');
       fetchSchedule(); // Refresh grid
+      fetchHolidays(); // Refresh holidays
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to apply override');
     }
@@ -95,11 +157,11 @@ const DoctorSchedule = () => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Clock size={28} style={{ color: 'var(--accent-primary)' }} />
-          <h1>Diagnostic Grid</h1>
+          <h1>Dr. Availability</h1>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', height: '40px' }}>
-          <div style={{ width: '180px', height: '100%' }}>
+          <div style={{ width: '200px', height: '100%' }}>
             <CustomSelect
               value={selectedDoctor}
               onChange={(val) => setSelectedDoctor(val)}
@@ -108,7 +170,7 @@ const DoctorSchedule = () => {
               triggerStyle={{ borderRadius: '2rem' }}
             />
           </div>
-          <div style={{ width: '180px', height: '100%' }}>
+          <div style={{ width: '200px', height: '100%' }}>
             <CustomDatePicker
               value={targetDate}
               onChange={(val) => setTargetDate(val)}
@@ -152,6 +214,110 @@ const DoctorSchedule = () => {
           </div>
         )}
       </div>
+
+      <div style={{ marginTop: '1rem' }}>
+        <button 
+          onClick={() => setShowManageHolidays(!showManageHolidays)}
+          style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, transition: 'var(--transition)' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Palmtree size={20} color="var(--accent-primary)" />
+            {user?.role === 'receptionist' ? 'Holidays' : 'Manage Holidays'}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>{holidays.length} Range(s)</span>
+             {showManageHolidays ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
+        </button>
+
+        {showManageHolidays && (
+          <div style={{ padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderTop: 'none', borderRadius: '0 0 var(--radius-md) var(--radius-md)', maxHeight: '300px', overflowY: 'auto' }}>
+            {holidays.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', margin: '1rem 0' }}>No holidays found for this doctor.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {holidays.map((range, idx) => {
+                  const start = new Date(range[0].date).toLocaleDateString();
+                  const end = new Date(range[range.length - 1].date).toLocaleDateString();
+                  return (
+                    <div key={idx} style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{start} {range.length > 1 ? `- ${end}` : ''}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{range.length} day(s)</div>
+                      </div>
+                      {(user?.role === 'admin' || user?.role === 'doctor') && (
+                        <button 
+                          onClick={() => setDeleteModal({ show: true, range, mode: 'ENTIRE' })}
+                          style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {deleteModal.show && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="panel" style={{ width: '400px', maxWidth: '90vw', padding: '1.5rem', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Delete Holiday</h2>
+              <button 
+                onClick={() => setDeleteModal({ show: false, range: null, mode: 'ENTIRE' })}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+              ><X size={20} /></button>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              <button 
+                onClick={() => { setDeleteModal(prev => ({ ...prev, mode: 'ENTIRE' })); setSelectedDaysForDelete([]); }}
+                style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'ENTIRE' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'ENTIRE' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
+              >Entire Range</button>
+              <button 
+                onClick={() => setDeleteModal(prev => ({ ...prev, mode: 'PARTIAL' }))}
+                style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'PARTIAL' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'PARTIAL' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
+              >Select Days</button>
+            </div>
+
+            {deleteModal.mode === 'PARTIAL' && (
+               <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '1.5rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                 {deleteModal.range.map(h => (
+                   <label key={h._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                     <input 
+                       type="checkbox" 
+                       checked={selectedDaysForDelete.includes(h._id)}
+                       onChange={(e) => {
+                         if (e.target.checked) setSelectedDaysForDelete(prev => [...prev, h._id]);
+                         else setSelectedDaysForDelete(prev => prev.filter(id => id !== h._id));
+                       }}
+                       style={{ accentColor: 'var(--accent-primary)', width: '16px', height: '16px', cursor: 'pointer' }}
+                     />
+                     {new Date(h.date).toLocaleDateString()}
+                   </label>
+                 ))}
+               </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button onClick={() => setDeleteModal({ show: false, range: null, mode: 'ENTIRE' })} className="btn" style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-secondary)' }}>Cancel</button>
+              <button 
+                onClick={handleBulkDelete} 
+                disabled={deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0} 
+                className="btn" 
+                style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', background: '#ef4444', color: '#fff', border: 'none', opacity: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 0.5 : 1, cursor: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 'not-allowed' : 'pointer' }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {showOverride && createPortal(
         <div

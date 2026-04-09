@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api/axios';
-import { Calendar, Plus, Clock, FileText, CheckCircle2, XCircle, LogIn } from 'lucide-react';
+import { Calendar, Plus, Clock, FileText, CheckCircle2, XCircle, LogIn, CalendarClock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomSelect from '../components/CustomSelect';
@@ -10,7 +10,7 @@ const Appointments = () => {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filters
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
   const [filterStatus, setFilterStatus] = useState('');
@@ -29,13 +29,21 @@ const Appointments = () => {
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [notesText, setNotesText] = useState('');
 
+  // Reschedule Modal State
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleAppt, setRescheduleAppt] = useState(null);
+  const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
+  const [rescheduleSlots, setRescheduleSlots] = useState([]);
+  const [rescheduleError, setRescheduleError] = useState('');
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
+
   const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       let query = `?date=${filterDate}`;
       if (filterStatus) query += `&status=${filterStatus}`;
       let res = await api.get(`/auth/appointments${query}`);
-      
+
       let fetched = res.data.appointments || res.data;
       // Sort chronologically by time
       if (Array.isArray(fetched)) {
@@ -108,6 +116,55 @@ const Appointments = () => {
     }
   };
 
+  const openRescheduleModal = async (apt) => {
+    setRescheduleAppt(apt);
+    const initialDate = filterDate || new Date().toISOString().split('T')[0];
+    setRescheduleData({ date: initialDate, time: '' });
+    setShowReschedule(true);
+    setRescheduleError('');
+    
+    // Auto fetch slots
+    try {
+      const res = await api.get(`/auth/doctors/${apt.doctorId._id || apt.doctorId}/available-slots?date=${initialDate}`);
+      setRescheduleSlots(res.data.availableSlots || []);
+    } catch (err) {
+      setRescheduleSlots([]);
+    }
+  };
+
+  const handleRescheduleDateChange = async (date) => {
+    setRescheduleData({ ...rescheduleData, date, time: '' });
+    if (date && rescheduleAppt) {
+      try {
+        const res = await api.get(`/auth/doctors/${rescheduleAppt.doctorId._id || rescheduleAppt.doctorId}/available-slots?date=${date}`);
+        setRescheduleSlots(res.data.availableSlots || []);
+      } catch (err) {
+        setRescheduleSlots([]);
+      }
+    } else {
+      setRescheduleSlots([]);
+    }
+  };
+
+  const handleReschedule = async (e) => {
+    e.preventDefault();
+    setRescheduleError('');
+    setRescheduleLoading(true);
+    try {
+      await api.patch(`/auth/appointments/${rescheduleAppt._id}/reschedule`, {
+        appointmentDate: rescheduleData.date,
+        appointmentTime: rescheduleData.time
+      });
+      setShowReschedule(false);
+      setRescheduleAppt(null);
+      fetchAppointments();
+    } catch (err) {
+      setRescheduleError(err.response?.data?.message || 'Failed to reschedule appointment.');
+    } finally {
+      setRescheduleLoading(false);
+    }
+  };
+
   // Lifecycle Actions
   const handleAction = async (id, actionStr) => {
     try {
@@ -132,7 +189,7 @@ const Appointments = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'BOOKED': return { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' };
       case 'CHECKED_IN': return { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
       case 'COMPLETED': return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
@@ -148,18 +205,18 @@ const Appointments = () => {
           <Calendar size={28} style={{ color: 'var(--accent-primary)' }} />
           <h1>Appointments</h1>
         </div>
-        
+
         <div style={{ display: 'flex', gap: '1rem', height: '40px' }}>
-          <div style={{ width: '180px', height: '100%' }}>
-            <CustomDatePicker 
+          <div style={{ width: '200px', height: '100%' }}>
+            <CustomDatePicker
               value={filterDate}
               onChange={(val) => setFilterDate(val)}
               placeholder="Filter Date"
             />
           </div>
-          <div style={{ width: '180px', height: '100%' }}>
-            <CustomSelect 
-              value={filterStatus} 
+          <div style={{ width: '200px', height: '100%' }}>
+            <CustomSelect
+              value={filterStatus}
               onChange={(val) => setFilterStatus(val)}
               placeholder="All Statuses"
               options={[
@@ -173,7 +230,7 @@ const Appointments = () => {
           </div>
 
           {(user?.role === 'admin' || user?.role === 'receptionist') && (
-            <button className="btn btn-primary" onClick={() => setShowBooking(true)} style={{ width: '180px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', borderRadius: '2rem', fontSize: '0.9rem' }}>
+            <button className="btn btn-primary" onClick={() => setShowBooking(true)} style={{ width: '200px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', borderRadius: '2rem', fontSize: '0.9rem' }}>
               <Plus size={18} /> Book Slot
             </button>
           )}
@@ -200,7 +257,7 @@ const Appointments = () => {
                 // Ensure correct population objects
                 const patientName = apt.patientId?.name || 'Unknown';
                 const doctorName = apt.doctorId?.name || 'Unknown';
-                
+
                 return (
                   <tr key={apt._id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                     <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>{apt.appointmentTime}</td>
@@ -217,11 +274,14 @@ const Appointments = () => {
                       </span>
                     </td>
                     <td style={{ padding: '1rem 1.5rem', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                      
+
                       {apt.status === 'BOOKED' && (
                         <>
                           <button className="btn" style={{ padding: '0.5rem', color: '#f59e0b' }} onClick={() => handleAction(apt._id, 'check-in')} title="Check In">
                             <LogIn size={18} />
+                          </button>
+                          <button className="btn" style={{ padding: '0.5rem', color: '#8b5cf6' }} onClick={() => openRescheduleModal(apt)} title="Reschedule">
+                            <CalendarClock size={18} />
                           </button>
                           <button className="btn" style={{ padding: '0.5rem', color: 'var(--error)' }} onClick={() => handleAction(apt._id, 'cancel')} title="Cancel Appt">
                             <XCircle size={18} />
@@ -267,35 +327,37 @@ const Appointments = () => {
             <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={24} style={{ color: 'var(--accent-primary)' }} /> Book New Appointment
             </h2>
-            
+
             {bookingError && <div style={{ background: 'var(--error-bg)', color: 'var(--error)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{bookingError}</div>}
 
             <form onSubmit={handleBook} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Patient</label>
-                <CustomSelect 
-                  value={bookingData.patientId} 
-                  onChange={(val) => setBookingData({...bookingData, patientId: val})}
+                <CustomSelect
+                  value={bookingData.patientId}
+                  onChange={(val) => setBookingData({ ...bookingData, patientId: val })}
                   placeholder="Select Patient"
                   options={patients.map(p => ({ value: p._id, label: p.name }))}
                   triggerStyle={{ borderRadius: 'var(--radius-md)' }}
+                  searchable
                 />
               </div>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Doctor</label>
-                <CustomSelect 
-                  value={bookingData.doctorId} 
+                <CustomSelect
+                  value={bookingData.doctorId}
                   onChange={(val) => handleDateOrDoctorChange(val, bookingData.date)}
                   placeholder="Select Doctor"
                   options={doctors.map(d => ({ value: d._id, label: `${d.name} (${d.specialization})` }))}
                   triggerStyle={{ borderRadius: 'var(--radius-md)' }}
+                  searchable
                 />
               </div>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Date</label>
-                <CustomDatePicker 
+                <CustomDatePicker
                   value={bookingData.date}
                   onChange={(val) => handleDateOrDoctorChange(bookingData.doctorId, val)}
                   placeholder="Select Appointment Date"
@@ -309,9 +371,9 @@ const Appointments = () => {
                   {availableSlots.length > 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                       {availableSlots.map(slot => (
-                        <div 
-                          key={slot} 
-                          onClick={() => setBookingData({...bookingData, time: slot})}
+                        <div
+                          key={slot}
+                          onClick={() => setBookingData({ ...bookingData, time: slot })}
                           style={{
                             padding: '0.5rem', textAlign: 'center', borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'var(--transition)',
@@ -349,21 +411,88 @@ const Appointments = () => {
           background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
-          <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
             <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FileText style={{ color: 'var(--accent-primary)' }} /> Clinical Notes
             </h2>
             <form onSubmit={submitNotes} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <textarea 
-                rows="5" 
-                value={notesText} 
-                onChange={(e) => setNotesText(e.target.value)} 
+              <textarea
+                rows="5"
+                value={notesText}
+                onChange={(e) => setNotesText(e.target.value)}
                 placeholder="Diagnostic observations and prescription directives..."
                 required
               />
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                 <button type="button" onClick={() => setShowNotes(false)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary">Append Record</button>
+                <button type="submit" className="btn btn-primary">Save Notes</button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Reschedule Modal */}
+      {showReschedule && createPortal(
+        <div onClick={() => setShowReschedule(false)} style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <CalendarClock size={24} style={{ color: 'var(--accent-primary)' }} /> Reschedule
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+              Rescheduling appointment for <strong>{rescheduleAppt?.patientId?.name || 'Unknown Patient'}</strong> with <strong>Dr. {rescheduleAppt?.doctorId?.name || 'Unknown Doctor'}</strong>.
+            </p>
+
+            {rescheduleError && <div style={{ background: 'var(--error-bg)', color: 'var(--error)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{rescheduleError}</div>}
+
+            <form onSubmit={handleReschedule} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>New Date</label>
+                <CustomDatePicker 
+                  value={rescheduleData.date}
+                  onChange={(val) => handleRescheduleDateChange(val)}
+                  placeholder="Select New Date"
+                  placement="right"
+                />
+              </div>
+
+              {rescheduleData.date && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Available Times</label>
+                  {rescheduleSlots.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                      {rescheduleSlots.map(slot => (
+                        <div 
+                          key={slot} 
+                          onClick={() => setRescheduleData({...rescheduleData, time: slot})}
+                          style={{
+                            padding: '0.5rem', textAlign: 'center', borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'var(--transition)',
+                            background: rescheduleData.time === slot ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                            color: rescheduleData.time === slot ? '#fff' : 'var(--text-primary)',
+                            border: `1px solid ${rescheduleData.time === slot ? 'var(--accent-primary)' : 'var(--border-subtle)'}`
+                          }}
+                        >
+                          {slot}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ color: 'var(--warning)', fontSize: '0.875rem' }}>No slots available on this date.</p>
+                  )}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowReschedule(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={rescheduleLoading || !rescheduleData.time}>
+                  {rescheduleLoading ? 'Updating...' : 'Confirm Reschedule'}
+                </button>
               </div>
             </form>
           </div>

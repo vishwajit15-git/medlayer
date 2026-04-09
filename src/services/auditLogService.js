@@ -1,6 +1,6 @@
 const AuditLog=require("../models/AuditLog");
 
-const logAction=async({user,action,entity,entityId,meta={}})=>{
+const logAction=async({user,action,entity,entityId,description,meta={}})=>{
 
     await AuditLog.create({
         clinicId:user.clinicId,
@@ -9,6 +9,7 @@ const logAction=async({user,action,entity,entityId,meta={}})=>{
         action,
         entity,
         entityId,
+        description,
         meta
     });
 };

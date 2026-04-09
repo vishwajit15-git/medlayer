@@ -32,7 +32,7 @@ const PatientList = () => {
   const fetchPatients = useCallback(async (query = '') => {
     try {
       setLoading(true);
-      const endpoint = query ? `/auth/patients/search?name=${query}` : '/auth/patients';
+      const endpoint = query ? `/auth/patients/search?query=${encodeURIComponent(query)}` : '/auth/patients';
       const res = await api.get(endpoint);
       setPatients(res.data.patients || res.data || []);
     } catch (err) {

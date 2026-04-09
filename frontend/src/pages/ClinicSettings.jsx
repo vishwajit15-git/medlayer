@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
 import { Settings, Clock, CalendarDays } from 'lucide-react';
+import CustomTimePicker from '../components/CustomTimePicker';
 
 const DAYS_OF_WEEK = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -74,23 +75,22 @@ const ClinicSettings = () => {
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
               <Clock size={20} /> Operational Hours
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.75rem', alignItems: 'end' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Opening Time</label>
-                <input 
-                  type="time" 
+                <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Opening Time</label>
+                <CustomTimePicker
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  required 
+                  onChange={(val) => setStartTime(val)}
+                  placeholder="Start"
                 />
               </div>
+              <div style={{ paddingBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 500 }}>→</div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Closing Time</label>
-                <input 
-                  type="time" 
+                <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Closing Time</label>
+                <CustomTimePicker
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  required 
+                  onChange={(val) => setEndTime(val)}
+                  placeholder="End"
                 />
               </div>
             </div>

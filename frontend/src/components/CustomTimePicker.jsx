@@ -25,14 +25,18 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
 
   // Parse value into hours/minutes
   const parseTime = (val) => {
-    if (!val) return { hours: 9, minutes: 0 };
+    const dH = 9, dM = 0;
+    if (!val) return { hours: dH, minutes: dM, hourOffset: 240 + dH, minOffset: 200 };
     const [h, m] = val.split(':').map(Number);
-    return { hours: h || 0, minutes: m || 0 };
+    const hrs = h || 0, mins = m || 0;
+    return { hours: hrs, minutes: mins, hourOffset: 240 + hrs, minOffset: 200 + (mins === 30 ? 1 : 0) };
   };
 
   const [selected, setSelected] = useState(parseTime(value));
   const containerRef = useRef(null);
   const popupRef = useRef(null);
+  const hourColRef = useRef(null);
+  const minColRef = useRef(null);
   const [coords, setCoords] = useState({ top: -9999, left: -9999 });
 
   // Sync external value changes
@@ -70,19 +74,67 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
   const adjustHour = (dir) => {
     setSelected(prev => ({
       ...prev,
-      hours: (prev.hours + dir + 24) % 24
+      hours: (prev.hours + dir + 24) % 24,
+      hourOffset: (prev.hourOffset || 240 + prev.hours) + dir
     }));
   };
 
   const adjustMinute = (dir) => {
     setSelected(prev => {
       let newMin = prev.minutes + (dir * 30);
-      let newHour = prev.hours;
-      if (newMin >= 60) { newMin = 0; newHour = (newHour + 1) % 24; }
-      if (newMin < 0) { newMin = 30; newHour = (newHour - 1 + 24) % 24; }
-      return { hours: newHour, minutes: newMin };
+      if (newMin >= 60) newMin = 0;
+      if (newMin < 0) newMin = 30;
+      return { ...prev, minutes: newMin, minOffset: (prev.minOffset || 200 + (prev.minutes === 30 ? 1 : 0)) + dir };
     });
   };
+
+  const wheelHourAcc = useRef(0);
+  const wheelMinAcc = useRef(0);
+  const WHEEL_THRESHOLD = 80;
+
+  // Store latest adjust functions in refs so native listeners always use current state
+  const adjustHourRef = useRef(adjustHour);
+  const adjustMinuteRef = useRef(adjustMinute);
+  useEffect(() => { adjustHourRef.current = adjustHour; }, [selected]);
+  useEffect(() => { adjustMinuteRef.current = adjustMinute; }, [selected]);
+
+  // Attach non-passive native wheel listeners to prevent page scroll
+  useEffect(() => {
+    const hourEl = hourColRef.current;
+    const minEl = minColRef.current;
+    if (!hourEl || !minEl) return;
+
+    const onHourWheel = (e) => {
+      e.preventDefault();
+      wheelHourAcc.current += e.deltaY;
+      if (wheelHourAcc.current > WHEEL_THRESHOLD) {
+        adjustHourRef.current(1);
+        wheelHourAcc.current = 0;
+      } else if (wheelHourAcc.current < -WHEEL_THRESHOLD) {
+        adjustHourRef.current(-1);
+        wheelHourAcc.current = 0;
+      }
+    };
+
+    const onMinWheel = (e) => {
+      e.preventDefault();
+      wheelMinAcc.current += e.deltaY;
+      if (wheelMinAcc.current > WHEEL_THRESHOLD) {
+        adjustMinuteRef.current(1);
+        wheelMinAcc.current = 0;
+      } else if (wheelMinAcc.current < -WHEEL_THRESHOLD) {
+        adjustMinuteRef.current(-1);
+        wheelMinAcc.current = 0;
+      }
+    };
+
+    hourEl.addEventListener('wheel', onHourWheel, { passive: false });
+    minEl.addEventListener('wheel', onMinWheel, { passive: false });
+    return () => {
+      hourEl.removeEventListener('wheel', onHourWheel);
+      minEl.removeEventListener('wheel', onMinWheel);
+    };
+  }, [isOpen]);
 
   const handleConfirm = () => {
     onChange(`${pad(selected.hours)}:${pad(selected.minutes)}`);
@@ -97,6 +149,10 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
     quickSlots.push(`${pad(h)}:00`);
     if (h < 20) quickSlots.push(`${pad(h)}:30`);
   }
+
+  // Lists for slider animation (long arrays to simulate infinite scroll)
+  const hoursList = React.useMemo(() => Array.from({ length: 480 }, (_, i) => pad(i % 24)), []);
+  const minutesList = React.useMemo(() => Array.from({ length: 400 }, (_, i) => (i % 2 === 0 ? '00' : '30')), []);
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -147,24 +203,39 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
           {/* Hour : Minute Spinners */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
             {/* Hour Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}>
-              <button type="button" onClick={() => adjustHour(1)}
+            <div 
+              ref={hourColRef}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}
+            >
+              <button type="button" onClick={() => adjustHour(-1)}
                 style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronUp size={18} />
               </button>
               <div style={{
                 background: 'rgba(255,255,255,0.1)',
                 borderRadius: '10px',
-                padding: '0.5rem 0.75rem',
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                minWidth: '48px',
-                textAlign: 'center',
-                fontVariantNumeric: 'tabular-nums'
+                height: '44px',
+                width: '60px',
+                overflow: 'hidden',
+                position: 'relative'
               }}>
-                {pad(selected.hours)}
+                <div style={{
+                  display: 'flex', flexDirection: 'column',
+                  transform: `translateY(-${(selected.hourOffset !== undefined ? selected.hourOffset : 240 + selected.hours) * 44}px)`,
+                  transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                }}>
+                  {hoursList.map((h, i) => (
+                    <div key={i} style={{
+                      height: '44px', minHeight: '44px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.5rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums'
+                    }}>
+                      {h}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button type="button" onClick={() => adjustHour(-1)}
+              <button type="button" onClick={() => adjustHour(1)}
                 style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronDown size={18} />
               </button>
@@ -174,24 +245,39 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
             <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#9ca3af', paddingBottom: '2px' }}>:</span>
 
             {/* Minute Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}>
-              <button type="button" onClick={() => adjustMinute(1)}
+            <div 
+              ref={minColRef}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}
+            >
+              <button type="button" onClick={() => adjustMinute(-1)}
                 style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronUp size={18} />
               </button>
               <div style={{
                 background: 'rgba(255,255,255,0.1)',
                 borderRadius: '10px',
-                padding: '0.5rem 0.75rem',
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                minWidth: '48px',
-                textAlign: 'center',
-                fontVariantNumeric: 'tabular-nums'
+                height: '44px',
+                width: '60px',
+                overflow: 'hidden',
+                position: 'relative'
               }}>
-                {pad(selected.minutes)}
+                <div style={{
+                  display: 'flex', flexDirection: 'column',
+                  transform: `translateY(-${(selected.minOffset !== undefined ? selected.minOffset : 200 + (selected.minutes === 30 ? 1 : 0)) * 44}px)`,
+                  transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                }}>
+                  {minutesList.map((m, i) => (
+                    <div key={i} style={{
+                      height: '44px', minHeight: '44px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.5rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums'
+                    }}>
+                      {m}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button type="button" onClick={() => adjustMinute(-1)}
+              <button type="button" onClick={() => adjustMinute(1)}
                 style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronDown size={18} />
               </button>

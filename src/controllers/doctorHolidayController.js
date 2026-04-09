@@ -35,8 +35,22 @@ const deleteHoliday = async (req, res) => {
     });
 };
 
+const bulkDeleteHolidays = async (req, res) => {
+
+    const result = await doctorHolidayService.bulkDeleteHolidays(
+        req.body.ids,
+        req.user
+    );
+
+    return res.status(200).json({
+        message: `${result.deletedCount} holiday(s) deleted successfully`,
+        ...result
+    });
+};
+
 module.exports = {
     createHoliday,
     getHoliday,
-    deleteHoliday
+    deleteHoliday,
+    bulkDeleteHolidays
 };
