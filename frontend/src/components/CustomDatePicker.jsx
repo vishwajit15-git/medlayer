@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
-const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placement = "bottom" }) => {
+const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placement = "bottom", markedDates = [], onMonthChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pickerId = useRef(Math.random().toString(36).slice(2));
 
@@ -33,7 +33,6 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
   useLayoutEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const calWidth = 310; // calendar min-width (280) + padding (30)
       if (placement === 'left') {
         setCoords({
           top: rect.top + rect.height / 2 - 150,
@@ -58,7 +57,6 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
   // Close calendar on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Check if click is outside both button container AND the portal popup
       if (
         containerRef.current && !containerRef.current.contains(event.target) &&
         (!popupRef.current || !popupRef.current.contains(event.target))
@@ -69,6 +67,13 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Dispatch month changes to parent
+  useEffect(() => {
+    if (onMonthChange && isOpen) {
+      onMonthChange(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+    }
+  }, [currentMonth, isOpen, onMonthChange]);
 
   const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const startDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -147,19 +152,19 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
             : { left: `${coords.left}px` }),
           minWidth: '280px',
           width: 'max-content',
-          background: '#343438',
+          background: 'var(--bg-elevated)',
           borderRadius: '16px',
           padding: '1.25rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--shadow-dropdown)',
           zIndex: 9999,
-          color: '#ffffff'
+          color: 'var(--text-contrast)'
         }}>
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <button 
               type="button"
               onClick={handlePrevMonth} 
-              style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-contrast)', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
             >
               <ChevronLeft size={20} />
             </button>
@@ -169,14 +174,14 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
             <button 
               type="button"
               onClick={handleNextMonth} 
-              style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-contrast)', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
             >
               <ChevronRight size={20} />
             </button>
           </div>
 
           {/* Days of week */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', marginBottom: '0.75rem', color: '#9ca3af', fontSize: '0.875rem', fontWeight: 500 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', marginBottom: '0.75rem', color: 'var(--text-tertiary)', fontSize: '0.875rem', fontWeight: 500 }}>
             {dayNames.map(d => <div key={d}>{d}</div>)}
           </div>
 
@@ -187,17 +192,22 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
               
               // Check if selected
               const isSelected = value && new Date(value).getDate() === d && new Date(value).getMonth() === monthIndex && new Date(value).getFullYear() === currentYear;
+              
+              // Check if marked
+              const formattedDay = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+              const isMarked = markedDates.includes(formattedDay);
 
               return (
                 <div 
                   key={d} 
                   onClick={() => handleDateSelect(d)}
                   style={{
+                    position: 'relative',
                     padding: '0.45rem',
                     cursor: 'pointer',
                     borderRadius: '50%',
-                    background: isSelected ? '#ffffff' : 'transparent',
-                    color: isSelected ? '#000000' : '#ffffff',
+                    background: isSelected ? 'var(--confirm-bg)' : 'transparent',
+                    color: isSelected ? 'var(--confirm-color)' : 'var(--text-contrast)',
                     fontWeight: isSelected ? 600 : 400,
                     aspectRatio: '1',
                     display: 'flex',
@@ -209,10 +219,30 @@ const CustomDatePicker = ({ value, onChange, placeholder = "YYYY/MM/DD", placeme
                     width: '32px',
                     height: '32px'
                   }}
-                  onMouseOver={(e) => { if(!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
+                  onMouseOver={(e) => { if(!isSelected) e.currentTarget.style.background = 'var(--hover-overlay)' }}
                   onMouseOut={(e) => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}
                 >
-                  {d}
+                  <span style={{ position: 'relative', zIndex: 1 }}>{d}</span>
+                  {isMarked && !isSelected && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '2px',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '50%',
+                      background: 'var(--error)'
+                    }} />
+                  )}
+                  {isMarked && isSelected && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '2px',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '50%',
+                      background: 'var(--bg-secondary)'
+                    }} />
+                  )}
                 </div>
               );
             })}

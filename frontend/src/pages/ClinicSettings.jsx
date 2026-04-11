@@ -111,7 +111,7 @@ const ClinicSettings = () => {
                     borderRadius: 'var(--radius-md)',
                     border: `1px solid ${workingDays.includes(day) ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
                     background: workingDays.includes(day) ? 'var(--accent-primary)' : 'transparent',
-                    color: workingDays.includes(day) ? '#fff' : 'var(--text-secondary)',
+                    color: workingDays.includes(day) ? 'var(--text-on-accent)' : 'var(--text-secondary)',
                     cursor: 'pointer',
                     fontWeight: 600,
                     transition: 'var(--transition)'

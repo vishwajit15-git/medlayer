@@ -34,9 +34,9 @@ const AuditLogs = () => {
   const uniqueActions = [...new Set(logs.map(l => l.action))];
 
   const getActionColor = (action = '') => {
-    if (action.includes('CREATE') || action.includes('ADD')) return '#10b981';
-    if (action.includes('DELETE') || action.includes('CANCEL')) return '#ef4444';
-    if (action.includes('UPDATE') || action.includes('RESCHEDULE') || action.includes('COMPLETE')) return '#f59e0b';
+    if (action.includes('CREATE') || action.includes('ADD')) return 'var(--success)';
+    if (action.includes('DELETE') || action.includes('CANCEL')) return 'var(--error)';
+    if (action.includes('UPDATE') || action.includes('RESCHEDULE') || action.includes('COMPLETE')) return 'var(--warning)';
     return 'var(--accent-primary)';
   };
 

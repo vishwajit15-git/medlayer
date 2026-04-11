@@ -53,7 +53,7 @@ const Login = () => {
               transition: 'var(--transition)'
             }}
           >
-            Administrator
+            Admin
           </button>
           <button 
             type="button"
@@ -64,13 +64,30 @@ const Login = () => {
               border: 'none', 
               background: loginRole === 'receptionist' ? 'var(--bg-secondary)' : 'transparent',
               color: loginRole === 'receptionist' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              borderRadius: '0 var(--radius-md) var(--radius-md) 0',
+              borderRadius: '0',
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'var(--transition)'
             }}
           >
             Receptionist
+          </button>
+          <button 
+            type="button"
+            onClick={() => setLoginRole('doctor')}
+            style={{ 
+              flex: 1, 
+              padding: '0.75rem', 
+              border: 'none', 
+              background: loginRole === 'doctor' ? 'var(--bg-secondary)' : 'transparent',
+              color: loginRole === 'doctor' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              borderRadius: '0 var(--radius-md) var(--radius-md) 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'var(--transition)'
+            }}
+          >
+            Doctor
           </button>
         </div>
 

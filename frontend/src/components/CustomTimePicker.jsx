@@ -187,12 +187,12 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
           left: `${coords.left}px`,
           minWidth: '200px',
           width: 'max-content',
-          background: '#343438',
+          background: 'var(--bg-elevated)',
           borderRadius: '14px',
           padding: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--shadow-dropdown)',
           zIndex: 9999,
-          color: '#ffffff'
+          color: 'var(--text-contrast)'
         }}>
           {/* Spinner Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
@@ -208,11 +208,11 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}
             >
               <button type="button" onClick={() => adjustHour(-1)}
-                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronUp size={18} />
               </button>
               <div style={{
-                background: 'rgba(255,255,255,0.1)',
+                background: 'var(--hover-overlay)',
                 borderRadius: '10px',
                 height: '44px',
                 width: '60px',
@@ -236,13 +236,13 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
                 </div>
               </div>
               <button type="button" onClick={() => adjustHour(1)}
-                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronDown size={18} />
               </button>
             </div>
 
             {/* Colon Separator */}
-            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#9ca3af', paddingBottom: '2px' }}>:</span>
+            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-tertiary)', paddingBottom: '2px' }}>:</span>
 
             {/* Minute Column */}
             <div 
@@ -250,11 +250,11 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}
             >
               <button type="button" onClick={() => adjustMinute(-1)}
-                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronUp size={18} />
               </button>
               <div style={{
-                background: 'rgba(255,255,255,0.1)',
+                background: 'var(--hover-overlay)',
                 borderRadius: '10px',
                 height: '44px',
                 width: '60px',
@@ -278,7 +278,7 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
                 </div>
               </div>
               <button type="button" onClick={() => adjustMinute(1)}
-                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '0.15rem', display: 'flex' }}>
                 <ChevronDown size={18} />
               </button>
             </div>
@@ -291,8 +291,8 @@ const CustomTimePicker = ({ value, onChange, placeholder = "HH:MM", placement = 
               padding: '0.5rem',
               borderRadius: '8px',
               border: 'none',
-              background: '#ffffff',
-              color: '#000000',
+              background: 'var(--confirm-bg)',
+              color: 'var(--confirm-color)',
               fontWeight: 600,
               fontSize: '0.8rem',
               cursor: 'pointer',

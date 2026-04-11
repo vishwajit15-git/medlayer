@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
 import { Users, UserPlus, Mail, Lock, ShieldCheck } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
 
 const StaffManagement = () => {
   const [formData, setFormData] = useState({
@@ -39,7 +40,7 @@ const StaffManagement = () => {
       <div className="panel">
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <UserPlus size={20} style={{ color: 'var(--accent-primary)' }} /> Register New Receptionist
+            <UserPlus size={20} style={{ color: 'var(--accent-primary)' }} /> Register New {formData.role === 'doctor' ? 'Doctor' : 'Receptionist'}
           </h2>
           <p className="text-muted">Create certified access accounts for front-desk clinical operators.</p>
         </div>
@@ -66,7 +67,7 @@ const StaffManagement = () => {
               <input 
                 type="email" 
                 required 
-                placeholder="receptionist@clinic.com"
+                placeholder={formData.role === 'doctor' ? "doctor@clinic.com" : "receptionist@clinic.com"}
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 style={{ width: '100%', padding: '0.875rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
@@ -92,14 +93,16 @@ const StaffManagement = () => {
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                 <ShieldCheck size={16} /> Assigned Protocol Role
               </label>
-              <div style={{ width: '100%', padding: '0.875rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', background: 'rgba(59, 130, 246, 0.05)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <select 
-                  disabled
+              <div style={{ height: '54px' }}>
+                <CustomSelect 
                   value={formData.role}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontWeight: 600, flex: 1, appearance: 'none', padding: 0 }}
-                >
-                  <option value="receptionist">Clinical Receptionist</option>
-                </select>
+                  onChange={(val) => setFormData({...formData, role: val})}
+                  options={[
+                    { value: 'receptionist', label: 'Clinical Receptionist' },
+                    { value: 'doctor', label: 'Medical Doctor' }
+                  ]}
+                  triggerStyle={{ padding: '0.875rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+                />
               </div>
             </div>
           </div>

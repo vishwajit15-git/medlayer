@@ -146,8 +146,8 @@ const DoctorSchedule = () => {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'AVAILABLE': return { bg: 'var(--bg-tertiary)', border: 'var(--border-subtle)', color: 'var(--text-primary)' };
-      case 'BOOKED': return { bg: 'rgba(59, 130, 246, 0.1)', border: '#3b82f6', color: '#3b82f6' };
-      case 'BREAK': return { bg: 'rgba(239, 68, 68, 0.1)', border: '#ef4444', color: '#ef4444' };
+      case 'BOOKED': return { bg: 'var(--booked-bg)', border: 'var(--booked-color)', color: 'var(--booked-color)' };
+      case 'BREAK': return { bg: 'var(--error-bg)', border: 'var(--error)', color: 'var(--error)' };
       default: return { bg: 'var(--bg-tertiary)', border: 'var(--border-subtle)', color: 'var(--text-secondary)' };
     }
   };
@@ -248,7 +248,7 @@ const DoctorSchedule = () => {
                       {(user?.role === 'admin' || user?.role === 'doctor') && (
                         <button 
                           onClick={() => setDeleteModal({ show: true, range, mode: 'ENTIRE' })}
-                          style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ background: 'var(--error-bg)', color: 'var(--error)', border: '1px solid var(--error)', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -263,7 +263,7 @@ const DoctorSchedule = () => {
       </div>
 
       {deleteModal.show && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div className="panel" style={{ width: '400px', maxWidth: '90vw', padding: '1.5rem', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Delete Holiday</h2>
@@ -276,11 +276,11 @@ const DoctorSchedule = () => {
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
               <button 
                 onClick={() => { setDeleteModal(prev => ({ ...prev, mode: 'ENTIRE' })); setSelectedDaysForDelete([]); }}
-                style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'ENTIRE' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'ENTIRE' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
+                style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'ENTIRE' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'ENTIRE' ? 'var(--text-on-accent)' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
               >Entire Range</button>
               <button 
                 onClick={() => setDeleteModal(prev => ({ ...prev, mode: 'PARTIAL' }))}
-                style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'PARTIAL' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'PARTIAL' ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
+                style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'PARTIAL' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'PARTIAL' ? 'var(--text-on-accent)' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
               >Select Days</button>
             </div>
 
@@ -309,7 +309,7 @@ const DoctorSchedule = () => {
                 onClick={handleBulkDelete} 
                 disabled={deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0} 
                 className="btn" 
-                style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', background: '#ef4444', color: '#fff', border: 'none', opacity: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 0.5 : 1, cursor: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', background: 'var(--danger-button-bg)', color: 'var(--text-on-accent)', border: 'none', opacity: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 0.5 : 1, cursor: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 'not-allowed' : 'pointer' }}
               >
                 Delete
               </button>
@@ -325,7 +325,7 @@ const DoctorSchedule = () => {
           onClick={(e) => { if (e.target === e.currentTarget) setShowOverride(false); }}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+            background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
           }}
         >
@@ -339,7 +339,7 @@ const DoctorSchedule = () => {
             {/* Modal Header */}
             <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--booked-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Clock size={18} style={{ color: 'var(--accent-primary)' }} />
                 </div>
                 <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Manage Availability</h2>
@@ -360,7 +360,7 @@ const DoctorSchedule = () => {
                     style={{
                       flex: 1, padding: '0.6rem 0.5rem', border: 'none',
                       background: overrideType === 'BREAK' ? 'var(--accent-primary)' : 'transparent',
-                      color: overrideType === 'BREAK' ? '#fff' : 'var(--text-secondary)',
+                      color: overrideType === 'BREAK' ? 'var(--text-on-accent)' : 'var(--text-secondary)',
                       borderRadius: '6px', fontWeight: 600, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       gap: '0.4rem', transition: 'all 0.2s', fontSize: '0.8rem'
@@ -373,7 +373,7 @@ const DoctorSchedule = () => {
                     style={{
                       flex: 1, padding: '0.6rem 0.5rem', border: 'none',
                       background: overrideType === 'HOLIDAY' ? 'var(--accent-primary)' : 'transparent',
-                      color: overrideType === 'HOLIDAY' ? '#fff' : 'var(--text-secondary)',
+                      color: overrideType === 'HOLIDAY' ? 'var(--text-on-accent)' : 'var(--text-secondary)',
                       borderRadius: '6px', fontWeight: 600, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       gap: '0.4rem', transition: 'all 0.2s', fontSize: '0.8rem'

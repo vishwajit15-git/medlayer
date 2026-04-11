@@ -84,8 +84,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
           boxSizing: 'border-box',
           ...triggerStyle
         }}
-        onMouseOver={(e) => e.currentTarget.style.border = '1px solid var(--accent-primary)'}
-        onMouseOut={(e) => e.currentTarget.style.border = triggerStyle.border || '1px solid var(--border-subtle)'}
+
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {selectedOption ? selectedOption.label : <span style={{ color: 'var(--text-secondary)' }}>{placeholder}</span>}
@@ -110,11 +109,11 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
               top: `${coords.top}px`,
               left: `${coords.left}px`,
               width: `${coords.width}px`,
-              background: '#202022', // Darker background for depth
+              background: 'var(--bg-elevated)', // Elevates properly in both themes
               border: '1px solid var(--border-subtle)',
               borderRadius: '12px',
               padding: '0.5rem',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              boxShadow: 'var(--shadow-dropdown)',
               zIndex: 9999,
               maxHeight: '320px',
               overflowY: 'auto',
@@ -131,14 +130,14 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
               <div style={{
                 margin: '-0.5rem -0.5rem 0.25rem -0.5rem', /* Pull over container padding */
                 padding: '0.75rem 0.75rem 0.5rem 0.75rem',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                borderBottom: '1px solid var(--border-divider)',
                 position: 'sticky', top: '-0.5rem', /* Stick to absolute top */
-                background: '#202022',
+                background: 'var(--bg-elevated)',
                 zIndex: 2,
                 borderRadius: '12px 12px 0 0', /* Match container rounding */
                 display: 'flex', alignItems: 'center', gap: '0.6rem'
               }}>
-                <Search size={14} color="#6b7280" style={{ flexShrink: 0 }} />
+                <Search size={14} color="var(--text-tertiary)" style={{ flexShrink: 0 }} />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -149,15 +148,15 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
                   autoFocus
                   style={{
                     background: 'transparent', border: 'none', outline: 'none',
-                    color: '#e5e7eb', fontSize: '0.95rem', width: '100%',
+                    color: 'var(--text-primary)', fontSize: '0.95rem', width: '100%',
                     padding: 0, fontFamily: 'inherit', boxShadow: 'none',
-                    caretColor: '#fff'
+                    caretColor: 'var(--text-contrast)'
                   }}
                 />
               </div>
             )}
-            {/* Clear selection option — hidden when searchable (search bar replaces it) */}
-            {!searchable && (
+            {/* Clear selection option — only shown when a placeholder is explicitly set */}
+            {!searchable && placeholder && (
               <div
                 onClick={() => handleSelect('')}
                 style={{
@@ -191,7 +190,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
                     fontWeight: isSelected ? 600 : 400,
                     transition: 'background 0.2s',
                     fontSize: '0.875rem',
-                    background: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                    background: isSelected ? 'var(--booked-bg)' : 'transparent',
                     display: 'flex',
                     alignItems: 'center',
                     ...optionStyle

@@ -47,7 +47,7 @@ const Sidebar = () => {
               gap: '0.75rem',
               padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
-              color: isActive ? '#fff' : 'var(--text-secondary)',
+              color: isActive ? 'var(--text-on-accent)' : 'var(--text-secondary)',
               background: isActive ? 'var(--accent-primary)' : 'transparent',
               fontWeight: isActive ? 600 : 500,
               textDecoration: 'none',

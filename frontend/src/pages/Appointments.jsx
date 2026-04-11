@@ -14,6 +14,7 @@ const Appointments = () => {
   // Filters
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
   const [filterStatus, setFilterStatus] = useState('');
+  const [markedDates, setMarkedDates] = useState([]);
 
   // Booking Modal State
   const [showBooking, setShowBooking] = useState(false);
@@ -36,6 +37,19 @@ const Appointments = () => {
   const [rescheduleSlots, setRescheduleSlots] = useState([]);
   const [rescheduleError, setRescheduleError] = useState('');
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
+
+  const fetchMarkedDates = useCallback(async (year, month) => {
+    try {
+      const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endStr = new Date(year, month, 0).toISOString().split('T')[0];
+      const res = await api.get(`/auth/appointments/bulk?startDate=${startStr}&endDate=${endStr}`);
+      const apps = res.data.appointments || res.data || [];
+      const uniqueDates = [...new Set(apps.map(a => a.appointmentDate.split('T')[0]))];
+      setMarkedDates(uniqueDates);
+    } catch (err) {
+      console.error("Failed to fetch marked dates", err);
+    }
+  }, []);
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -190,10 +204,10 @@ const Appointments = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'BOOKED': return { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' };
-      case 'CHECKED_IN': return { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-      case 'COMPLETED': return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-      case 'CANCELLED': case 'NO_SHOW': return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' };
+      case 'BOOKED': return { bg: 'var(--booked-bg)', color: 'var(--booked-color)' };
+      case 'CHECKED_IN': return { bg: 'var(--checkin-bg)', color: 'var(--checkin-color)' };
+      case 'COMPLETED': return { bg: 'var(--completed-bg)', color: 'var(--completed-color)' };
+      case 'CANCELLED': case 'NO_SHOW': return { bg: 'var(--cancelled-bg)', color: 'var(--cancelled-color)' };
       default: return { bg: 'var(--bg-tertiary)', color: 'var(--text-secondary)' };
     }
   };
@@ -211,6 +225,8 @@ const Appointments = () => {
             <CustomDatePicker
               value={filterDate}
               onChange={(val) => setFilterDate(val)}
+              onMonthChange={fetchMarkedDates}
+              markedDates={markedDates}
               placeholder="Filter Date"
             />
           </div>
@@ -262,7 +278,7 @@ const Appointments = () => {
                   <tr key={apt._id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                     <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>{apt.appointmentTime}</td>
                     <td style={{ padding: '1rem 1.5rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'var(--text-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>
                         {patientName.charAt(0).toUpperCase()}
                       </div>
                       {patientName}
@@ -277,10 +293,10 @@ const Appointments = () => {
 
                       {apt.status === 'BOOKED' && (
                         <>
-                          <button className="btn" style={{ padding: '0.5rem', color: '#f59e0b' }} onClick={() => handleAction(apt._id, 'check-in')} title="Check In">
+                          <button className="btn" style={{ padding: '0.5rem', color: 'var(--checkin-color)' }} onClick={() => handleAction(apt._id, 'check-in')} title="Check In">
                             <LogIn size={18} />
                           </button>
-                          <button className="btn" style={{ padding: '0.5rem', color: '#8b5cf6' }} onClick={() => openRescheduleModal(apt)} title="Reschedule">
+                          <button className="btn" style={{ padding: '0.5rem', color: 'var(--reschedule-color)' }} onClick={() => openRescheduleModal(apt)} title="Reschedule">
                             <CalendarClock size={18} />
                           </button>
                           <button className="btn" style={{ padding: '0.5rem', color: 'var(--error)' }} onClick={() => handleAction(apt._id, 'cancel')} title="Cancel Appt">
@@ -320,7 +336,7 @@ const Appointments = () => {
       {showBooking && createPortal(
         <div onClick={() => setShowBooking(false)} style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -378,7 +394,7 @@ const Appointments = () => {
                             padding: '0.5rem', textAlign: 'center', borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'var(--transition)',
                             background: bookingData.time === slot ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                            color: bookingData.time === slot ? '#fff' : 'var(--text-primary)',
+                            color: bookingData.time === slot ? 'var(--text-on-accent)' : 'var(--text-primary)',
                             border: `1px solid ${bookingData.time === slot ? 'var(--accent-primary)' : 'var(--border-subtle)'}`
                           }}
                         >
@@ -408,7 +424,7 @@ const Appointments = () => {
       {showNotes && createPortal(
         <div onClick={() => setShowNotes(false)} style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
@@ -437,7 +453,7 @@ const Appointments = () => {
       {showReschedule && createPortal(
         <div onClick={() => setShowReschedule(false)} style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -474,7 +490,7 @@ const Appointments = () => {
                             padding: '0.5rem', textAlign: 'center', borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'var(--transition)',
                             background: rescheduleData.time === slot ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                            color: rescheduleData.time === slot ? '#fff' : 'var(--text-primary)',
+                            color: rescheduleData.time === slot ? 'var(--text-on-accent)' : 'var(--text-primary)',
                             border: `1px solid ${rescheduleData.time === slot ? 'var(--accent-primary)' : 'var(--border-subtle)'}`
                           }}
                         >
