@@ -15,6 +15,7 @@ const Appointments = () => {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
   const [filterStatus, setFilterStatus] = useState('');
   const [markedDates, setMarkedDates] = useState([]);
+  const [calendarView, setCalendarView] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
 
   // Booking Modal State
   const [showBooking, setShowBooking] = useState(false);
@@ -39,13 +40,26 @@ const Appointments = () => {
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
 
   const fetchMarkedDates = useCallback(async (year, month) => {
+    setCalendarView({ year, month });
     try {
       const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
       const endStr = new Date(year, month, 0).toISOString().split('T')[0];
       const res = await api.get(`/auth/appointments/bulk?startDate=${startStr}&endDate=${endStr}`);
       const apps = res.data.appointments || res.data || [];
-      const uniqueDates = [...new Set(apps.map(a => a.appointmentDate.split('T')[0]))];
-      setMarkedDates(uniqueDates);
+      const activeApps = apps.filter(a => ['BOOKED', 'CHECKED_IN'].includes(a.status));
+
+      // Convert UTC db dates to local YYYY-MM-DD to avoid timezone shift misalignments
+      const uniqueDates = [...new Set(activeApps.map(a => {
+        const d = new Date(a.appointmentDate);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }))];
+
+      const today = new Date();
+      // Ensure local timezone matching instead of strict ISO UTC to prevent timezone offsets
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      const futureDates = uniqueDates.filter(d => d >= todayStr);
+      setMarkedDates(futureDates);
     } catch (err) {
       console.error("Failed to fetch marked dates", err);
     }
@@ -74,6 +88,11 @@ const Appointments = () => {
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
+
+  // Initial fetch for marked dates
+  useEffect(() => {
+    fetchMarkedDates(new Date(filterDate).getFullYear(), new Date(filterDate).getMonth() + 1);
+  }, []);
 
   // Load prerequisites for booking
   const loadPrerequisites = async () => {
@@ -123,6 +142,7 @@ const Appointments = () => {
       setShowBooking(false);
       setBookingData({ doctorId: '', patientId: '', date: '', time: '' });
       fetchAppointments();
+      fetchMarkedDates(calendarView.year, calendarView.month);
     } catch (err) {
       setBookingError(err.response?.data?.message || 'Failed to book appointment. Please check availability.');
     } finally {
@@ -136,7 +156,7 @@ const Appointments = () => {
     setRescheduleData({ date: initialDate, time: '' });
     setShowReschedule(true);
     setRescheduleError('');
-    
+
     // Auto fetch slots
     try {
       const res = await api.get(`/auth/doctors/${apt.doctorId._id || apt.doctorId}/available-slots?date=${initialDate}`);
@@ -172,6 +192,7 @@ const Appointments = () => {
       setShowReschedule(false);
       setRescheduleAppt(null);
       fetchAppointments();
+      fetchMarkedDates(calendarView.year, calendarView.month);
     } catch (err) {
       setRescheduleError(err.response?.data?.message || 'Failed to reschedule appointment.');
     } finally {
@@ -184,6 +205,7 @@ const Appointments = () => {
     try {
       await api.patch(`/auth/appointments/${id}/${actionStr}`);
       fetchAppointments();
+      fetchMarkedDates(calendarView.year, calendarView.month);
     } catch (err) {
       alert(err.response?.data?.message || `Failed to ${actionStr}`);
     }
@@ -469,7 +491,7 @@ const Appointments = () => {
             <form onSubmit={handleReschedule} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>New Date</label>
-                <CustomDatePicker 
+                <CustomDatePicker
                   value={rescheduleData.date}
                   onChange={(val) => handleRescheduleDateChange(val)}
                   placeholder="Select New Date"
@@ -483,9 +505,9 @@ const Appointments = () => {
                   {rescheduleSlots.length > 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                       {rescheduleSlots.map(slot => (
-                        <div 
-                          key={slot} 
-                          onClick={() => setRescheduleData({...rescheduleData, time: slot})}
+                        <div
+                          key={slot}
+                          onClick={() => setRescheduleData({ ...rescheduleData, time: slot })}
                           style={{
                             padding: '0.5rem', textAlign: 'center', borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'var(--transition)',

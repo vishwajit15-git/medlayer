@@ -64,7 +64,7 @@ const DoctorSchedule = () => {
     try {
       const res = await api.get(`/auth/doctor-holidays?doctorId=${selectedDoctor}`);
       const list = res.data.holidays || [];
-      
+
       const grouped = [];
       let currentGroup = [];
 
@@ -102,7 +102,7 @@ const DoctorSchedule = () => {
       } else {
         idsToDelete = selectedDaysForDelete;
       }
-      
+
       if (idsToDelete.length === 0) return alert('No days selected');
 
       await api.post('/auth/doctor-holidays/bulk-delete', { ids: idsToDelete });
@@ -216,7 +216,7 @@ const DoctorSchedule = () => {
       </div>
 
       <div style={{ marginTop: '1rem' }}>
-        <button 
+        <button
           onClick={() => setShowManageHolidays(!showManageHolidays)}
           style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, transition: 'var(--transition)' }}
         >
@@ -225,8 +225,8 @@ const DoctorSchedule = () => {
             {user?.role === 'receptionist' ? 'Holidays' : 'Manage Holidays'}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>{holidays.length} Range(s)</span>
-             {showManageHolidays ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>{holidays.length} Range(s)</span>
+            {showManageHolidays ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </button>
 
@@ -246,7 +246,7 @@ const DoctorSchedule = () => {
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{range.length} day(s)</div>
                       </div>
                       {(user?.role === 'admin' || user?.role === 'doctor') && (
-                        <button 
+                        <button
                           onClick={() => setDeleteModal({ show: true, range, mode: 'ENTIRE' })}
                           style={{ background: 'var(--error-bg)', color: 'var(--error)', border: '1px solid var(--error)', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
@@ -267,48 +267,48 @@ const DoctorSchedule = () => {
           <div className="panel" style={{ width: '400px', maxWidth: '90vw', padding: '1.5rem', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Delete Holiday</h2>
-              <button 
+              <button
                 onClick={() => setDeleteModal({ show: false, range: null, mode: 'ENTIRE' })}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
               ><X size={20} /></button>
             </div>
-            
+
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-              <button 
+              <button
                 onClick={() => { setDeleteModal(prev => ({ ...prev, mode: 'ENTIRE' })); setSelectedDaysForDelete([]); }}
                 style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'ENTIRE' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'ENTIRE' ? 'var(--text-on-accent)' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
               >Entire Range</button>
-              <button 
+              <button
                 onClick={() => setDeleteModal(prev => ({ ...prev, mode: 'PARTIAL' }))}
                 style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'PARTIAL' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'PARTIAL' ? 'var(--text-on-accent)' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
               >Select Days</button>
             </div>
 
             {deleteModal.mode === 'PARTIAL' && (
-               <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '1.5rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                 {deleteModal.range.map(h => (
-                   <label key={h._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', cursor: 'pointer', color: 'var(--text-primary)' }}>
-                     <input 
-                       type="checkbox" 
-                       checked={selectedDaysForDelete.includes(h._id)}
-                       onChange={(e) => {
-                         if (e.target.checked) setSelectedDaysForDelete(prev => [...prev, h._id]);
-                         else setSelectedDaysForDelete(prev => prev.filter(id => id !== h._id));
-                       }}
-                       style={{ accentColor: 'var(--accent-primary)', width: '16px', height: '16px', cursor: 'pointer' }}
-                     />
-                     {new Date(h.date).toLocaleDateString()}
-                   </label>
-                 ))}
-               </div>
+              <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '1.5rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                {deleteModal.range.map(h => (
+                  <label key={h._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedDaysForDelete.includes(h._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedDaysForDelete(prev => [...prev, h._id]);
+                        else setSelectedDaysForDelete(prev => prev.filter(id => id !== h._id));
+                      }}
+                      style={{ accentColor: 'var(--accent-primary)', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    {new Date(h.date).toLocaleDateString()}
+                  </label>
+                ))}
+              </div>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <button onClick={() => setDeleteModal({ show: false, range: null, mode: 'ENTIRE' })} className="btn" style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-secondary)' }}>Cancel</button>
-              <button 
-                onClick={handleBulkDelete} 
-                disabled={deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0} 
-                className="btn" 
+              <button
+                onClick={handleBulkDelete}
+                disabled={deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0}
+                className="btn"
                 style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', background: 'var(--danger-button-bg)', color: 'var(--text-on-accent)', border: 'none', opacity: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 0.5 : 1, cursor: (deleteModal.mode === 'PARTIAL' && selectedDaysForDelete.length === 0) ? 'not-allowed' : 'pointer' }}
               >
                 Delete

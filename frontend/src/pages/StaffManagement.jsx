@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { Users, UserPlus, Mail, Lock, ShieldCheck } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
@@ -7,11 +7,40 @@ const StaffManagement = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'receptionist'
+    role: 'receptionist',
+    doctorId: ''
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [unlinkedDoctors, setUnlinkedDoctors] = useState([]);
+
+  useEffect(() => {
+    const fetchDoctorsAndUsers = async () => {
+      try {
+        const [docsRes, usersRes] = await Promise.all([
+          api.get('/auth/doctors'),
+          api.get('/auth/users')
+        ]);
+        
+        const doctors = docsRes.data.doctors || docsRes.data || [];
+        const users = usersRes.data.users || usersRes.data || [];
+        
+        // Filter out doctors that already have a user account
+        const unlinked = doctors.filter(doc => 
+          !users.some(user => user.doctorId && user.doctorId.toString() === doc._id.toString())
+        );
+        
+        setUnlinkedDoctors(unlinked);
+      } catch (err) {
+        console.error("Failed to fetch doctors and users", err);
+      }
+    };
+
+    if (formData.role === 'doctor') {
+      fetchDoctorsAndUsers();
+    }
+  }, [formData.role]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -22,7 +51,12 @@ const StaffManagement = () => {
     try {
       await api.post('/auth/users', formData);
       setMessage(`Successfully registered new ${formData.role} account: ${formData.email}`);
-      setFormData({ ...formData, email: '', password: '' }); // keep role
+      setFormData({ ...formData, email: '', password: '', doctorId: '' }); // keep role
+      
+      // Remove the newly linked doctor from the dropdown
+      if (formData.role === 'doctor' && formData.doctorId) {
+        setUnlinkedDoctors(prev => prev.filter(doc => doc._id !== formData.doctorId));
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register staff account.');
     } finally {
@@ -89,14 +123,15 @@ const StaffManagement = () => {
               />
             </div>
             
-            <div style={{ gridColumn: 'span 2' }}>
+            
+            <div style={{ gridColumn: formData.role === 'doctor' ? 'span 1' : 'span 2' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                 <ShieldCheck size={16} /> Assigned Protocol Role
               </label>
               <div style={{ height: '54px' }}>
                 <CustomSelect 
                   value={formData.role}
-                  onChange={(val) => setFormData({...formData, role: val})}
+                  onChange={(val) => setFormData({...formData, role: val, doctorId: ''})}
                   options={[
                     { value: 'receptionist', label: 'Clinical Receptionist' },
                     { value: 'doctor', label: 'Medical Doctor' }
@@ -105,10 +140,28 @@ const StaffManagement = () => {
                 />
               </div>
             </div>
+
+            {formData.role === 'doctor' && (
+              <div style={{ gridColumn: 'span 1' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                  <Users size={16} /> Link Doctor Profile
+                </label>
+                <div style={{ height: '54px' }}>
+                  <CustomSelect 
+                    value={formData.doctorId}
+                    onChange={(val) => setFormData({...formData, doctorId: val})}
+                    options={unlinkedDoctors.map(doc => ({ value: doc._id, label: doc.name }))}
+                    placeholder="Select Doctor Profile"
+                    searchable
+                    triggerStyle={{ padding: '0.875rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-            <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '0.875rem 2rem' }}>
+            <button type="submit" className="btn btn-primary" disabled={loading || (formData.role === 'doctor' && !formData.doctorId)} style={{ padding: '0.875rem 2rem' }}>
               {loading ? 'Generating Encrypted Account...' : 'Register Access Profile'}
             </button>
           </div>

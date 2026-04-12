@@ -66,6 +66,15 @@ router.post(
     validate(userSchema),
     wrapAsync(userController.createUser)
     ); 
+
+    // Get Users (ADMIN only)
+router.get(
+    "/users",
+    authMiddleware,
+    // Note: If you have a VIEW_USER permission you can use it here, otherwise just check in the service/controller
+    wrapAsync(userController.getUsers)
+    );
+
     //Login as Admin to Clinic D
 router.post("/login", wrapAsync(async (req, res) => {
     const { email, password } = req.body;

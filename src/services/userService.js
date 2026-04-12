@@ -46,4 +46,11 @@ const createUser = async (data, user) => {
   return newUser;
 };
 
-module.exports = { createUser };
+const getUsers = async (user) => {
+  if (user.role !== "admin") {
+    throw new ExpressError("Only admin can view users", 403);
+  }
+  return await User.find({ clinicId: user.clinicId }).select('-passwordHash');
+};
+
+module.exports = { createUser, getUsers };
