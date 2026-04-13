@@ -17,6 +17,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
       // Right-align dropdown to the trigger if it would overflow the viewport
       let left = rect.right - dropWidth;
       if (left < 8) left = 8;
+
       setCoords({
         top: rect.bottom + 8,
         left,
@@ -115,7 +116,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
               padding: '0.5rem',
               boxShadow: 'var(--shadow-dropdown)',
               zIndex: 9999,
-              maxHeight: '320px',
+              maxHeight: '220px',
               overflowY: 'auto',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
