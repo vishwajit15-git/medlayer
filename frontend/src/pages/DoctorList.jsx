@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import api from '../api/axios';
 import { UserRoundCog, Plus, Trash2, Clock, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import CustomTimePicker from '../components/CustomTimePicker';
 
 const DoctorList = () => {
   const { user } = useAuth();
@@ -179,13 +180,23 @@ const DoctorList = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {formData.availability.map((shift, index) => (
                     <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, zIndex: 1050 }}>
                         <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.75rem' }}>Start Time</label>
-                        <input type="time" value={shift.startTime} onChange={(e) => handleShiftChange(index, 'startTime', e.target.value)} required />
+                        <div style={{ height: '40px' }}>
+                          <CustomTimePicker
+                            value={shift.startTime}
+                            onChange={(val) => handleShiftChange(index, 'startTime', val)}
+                          />
+                        </div>
                       </div>
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, zIndex: 1050 }}>
                         <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.75rem' }}>End Time</label>
-                        <input type="time" value={shift.endTime} onChange={(e) => handleShiftChange(index, 'endTime', e.target.value)} required />
+                        <div style={{ height: '40px' }}>
+                          <CustomTimePicker
+                            value={shift.endTime}
+                            onChange={(val) => handleShiftChange(index, 'endTime', val)}
+                          />
+                        </div>
                       </div>
                       {formData.availability.length > 1 && (
                         <button type="button" onClick={() => handleRemoveShift(index)} className="btn btn-secondary" style={{ padding: '0.75rem', color: 'var(--error)' }}>

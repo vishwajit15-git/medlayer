@@ -10,20 +10,25 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    role:{
-        type:String,
-        enum:["admin","receptionist","doctor"],
-        default:"admin"
+    role: {
+        type: String,
+        enum: ["admin", "receptionist", "doctor"],
+        default: "admin"
     },
-    clinicId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Clinic",
-        required:true
+    clinicId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Clinic",
+        required: true
     },
-    refreshToken:{
-        type:String,
-        default:null
+    refreshToken: {
+        type: String,
+        default: null
+    },
+    doctorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Doctor",
+        default: null
     }
-},{ timestamps: true });
+}, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

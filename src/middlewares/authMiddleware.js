@@ -18,7 +18,8 @@ module.exports.authMiddleware = (req, res, next) => {
         req.user = {
             id: decoded.id,
             clinicId: decoded.clinicId,
-            role: decoded.role
+            role: decoded.role,
+            doctorId: decoded.doctorId
         };
 
         next();

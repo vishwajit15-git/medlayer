@@ -1,4 +1,5 @@
 const Patient = require("../models/Patient");
+const Appointment = require("../models/Appointment");
 const baseTenantService = require("./baseTenantService");
 const ExpressError=require("../utils/ExpressError");
 
@@ -7,7 +8,21 @@ const createPatient = async (data, user) => {
 };
 
 const getPatients = async (user) => {
-    return await baseTenantService.findAll(Patient, user);
+    let extraFilters = {};
+    if (user.role === 'doctor') {
+        let currentDocId = user.doctorId;
+        if (!currentDocId) {
+            const dbUser = await require("../models/User").findById(user.id);
+            currentDocId = dbUser?.doctorId;
+        }
+        
+        if (!currentDocId) return []; // Should never happen unless DB corrupt
+        
+        const appointments = await Appointment.find({ doctorId: currentDocId, clinicId: user.clinicId }).select('patientId');
+        const patientIds = appointments.map(a => a.patientId);
+        extraFilters._id = { $in: patientIds };
+    }
+    return await baseTenantService.findAll(Patient, user, extraFilters);
 };
 
 const deletePatient=async(id,user)=>{
@@ -26,6 +41,20 @@ const searchPatient=async(query,user)=>{
         isDeleted:false,
         name:{$regex:query,$options:"i"}
     };
+
+    if (user.role === 'doctor') {
+        let currentDocId = user.doctorId;
+        if (!currentDocId) {
+            const dbUser = await require("../models/User").findById(user.id);
+            currentDocId = dbUser?.doctorId;
+        }
+
+        if (!currentDocId) return []; 
+
+        const appointments = await Appointment.find({ doctorId: currentDocId, clinicId: user.clinicId }).select('patientId');
+        const patientIds = appointments.map(a => a.patientId);
+        filter._id = { $in: patientIds };
+    }
 
     //find patient
     const patients=await Patient.find(filter)

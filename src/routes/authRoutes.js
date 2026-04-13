@@ -1,9 +1,9 @@
-const express=require("express");
-const router=express.Router();
+const express = require("express");
+const router = express.Router();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {authMiddleware}=require("../middlewares/authMiddleware");
+const { authMiddleware } = require("../middlewares/authMiddleware");
 const ExpressError = require("../utils/ExpressError");
 const wrapAsync = require("../utils/wrapAsync");
 const User = require("../models/User");
@@ -16,16 +16,16 @@ const clinicController = require("../controllers/clinicController");
 const patientSchema = require("../validators/patientValidator");
 const patientController = require("../controllers/patientController");
 const appointmentSchema = require("../validators/appointmentValidator");
-const appointmentController=require("../controllers/appointmentController");
+const appointmentController = require("../controllers/appointmentController");
 const doctorBreakSchema = require("../validators/doctorBreakValidator");
 const doctorBreakController = require("../controllers/doctorBreakController");
 const doctorHolidaySchema = require("../validators/doctorHolidayValidator");
-const doctorHolidayController=require("../controllers/doctorHolidayController");
+const doctorHolidayController = require("../controllers/doctorHolidayController");
 const userSchema = require("../validators/userValidator");
 const userController = require("../controllers/userController");
 const clinicSettingsSchema = require("../validators/clinicSettingsValidator");
-const auditController=require("../controllers/auditLogController");
-const permit=require("../middlewares/permissionMiddleware");
+const auditController = require("../controllers/auditLogController");
+const permit = require("../middlewares/permissionMiddleware");
 
 router.get("/whoami", authMiddleware, (req, res) => {
     res.json({
@@ -37,7 +37,7 @@ router.get("/whoami", authMiddleware, (req, res) => {
 
 //CLINIC(Admin)
 
-    //create ClinicD
+//create ClinicD
 router.post(
     "/register-clinic",
     wrapAsync(clinicController.registerClinic)
@@ -45,11 +45,11 @@ router.post(
 
 // Clinic Settings D
 router.patch(
-  "/clinic/settings",
-  authMiddleware,
-  permit("UPDATE_CLINIC"),
-  validate(clinicSettingsSchema),
-  wrapAsync(clinicController.updateSettings)
+    "/clinic/settings",
+    authMiddleware,
+    permit("UPDATE_CLINIC"),
+    validate(clinicSettingsSchema),
+    wrapAsync(clinicController.updateSettings)
 );
 
 //refresh acccess token
@@ -58,59 +58,66 @@ router.post(
     clinicController.refreshToken
 )
 
-    // Create User (ADMIN only) D
-router.post(  
+// Create User (ADMIN only) D
+router.post(
     "/users",
     authMiddleware,
     permit("CREATE_USER"),
     validate(userSchema),
     wrapAsync(userController.createUser)
-    ); 
+);
 
-    // Get Users (ADMIN only)
+// Get Users (ADMIN only)
 router.get(
     "/users",
     authMiddleware,
-    // Note: If you have a VIEW_USER permission you can use it here, otherwise just check in the service/controller
     wrapAsync(userController.getUsers)
-    );
+);
 
-    //Login as Admin to Clinic D
+// Delete User (ADMIN only)
+router.delete(
+    "/users/:id",
+    authMiddleware,
+    wrapAsync(userController.deleteUser)
+);
+
+//Login as Admin to Clinic D
 router.post("/login", wrapAsync(async (req, res) => {
     const { email, password } = req.body;
 
-    if(!email || !password){
+    if (!email || !password) {
         throw new ExpressError("Email and password required", 400);
     }
 
-    const user=await User.findOne({email});
+    const user = await User.findOne({ email });
 
-    if(!user) {
+    if (!user) {
         throw new ExpressError("Invalid Credentials", 401);
     }
 
-    const isMatch=await bcrypt.compare(password,user.passwordHash);
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
 
-    if(!isMatch){
+    if (!isMatch) {
         throw new ExpressError("Invalid Credentials", 401);
     }
 
-    const payload={
-        id:user._id,
-        clinicId:user.clinicId,
-        role:user.role
+    const payload = {
+        id: user._id,
+        clinicId: user.clinicId,
+        role: user.role,
+        doctorId: user.doctorId || null
     };
 
-    const accessToken=jwt.sign(
+    const accessToken = jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        {expiresIn:"3h"}   // short-lived
+        { expiresIn: "3h" }   // short-lived
     );
 
-    const refreshToken =jwt.sign(
+    const refreshToken = jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        {expiresIn: "7d"}    // long-lived
+        { expiresIn: "7d" }    // long-lived
     );
 
     user.refreshToken = refreshToken;
@@ -131,27 +138,27 @@ router.post(
 );
 
 //Doctors 
-    //Create Doctor D
+//Create Doctor D
 router.post("/doctors",
     authMiddleware,
     permit("CREATE_DOCTOR"),
     validate(doctorSchema),
     wrapAsync(doctorController.createDoctor));
 
-    //get Doctor  D
+//get Doctor  D
 router.get("/doctors",
     authMiddleware,
     permit("VIEW_DOCTOR"),
     wrapAsync(doctorController.getDoctors));
 
-    //delete Doctor
+//delete Doctor
 router.delete(
     "/doctors/:id",
     authMiddleware,
     permit("DELETE_DOCTOR"),
     wrapAsync(doctorController.deleteDoctor)
 );
-    //get doctor schedule D
+//get doctor schedule D
 router.get(
     "/doctors/:id/schedule",
     authMiddleware,
@@ -160,20 +167,20 @@ router.get(
 );
 
 //Patient
-    //Create Patient D
+//Create Patient D
 router.post("/patients",
     authMiddleware,
     permit("CREATE_PATIENT"),
     validate(patientSchema),
     wrapAsync(patientController.createPatient));
 
-    //get Patient  D
+//get Patient  D
 router.get("/patients",
     authMiddleware,
     permit("VIEW_PATIENT"),
     wrapAsync(patientController.getPatients));
 
-    //delete Patient
+//delete Patient
 router.delete(
     "/patients/:id",
     authMiddleware,
@@ -190,129 +197,129 @@ router.get(
 
 
 //Appointment
-    //Create appointment D
-    router.post("/appointments",
-        authMiddleware,
-        validate(appointmentSchema),
-        permit("CREATE_APPOINTMENT"),
-        wrapAsync(appointmentController.createAppointment)
-    );
+//Create appointment D
+router.post("/appointments",
+    authMiddleware,
+    validate(appointmentSchema),
+    permit("CREATE_APPOINTMENT"),
+    wrapAsync(appointmentController.createAppointment)
+);
 
-    //Get all available slots D
-    router.get("/doctors/:id/available-slots",
-        authMiddleware,
-        permit("VIEW_AVAILABLE_SLOTS"),
-        wrapAsync(appointmentController.getAvailableSlots)
-    );
+//Get all available slots D
+router.get("/doctors/:id/available-slots",
+    authMiddleware,
+    permit("VIEW_AVAILABLE_SLOTS"),
+    wrapAsync(appointmentController.getAvailableSlots)
+);
 
-    //cancel appointment D
-    router.patch("/appointments/:id/cancel",
-        authMiddleware,
-        permit("CANCEL_APPOINTMENT"),
-        wrapAsync(appointmentController.cancelAppointment)
-    );
+//cancel appointment D
+router.patch("/appointments/:id/cancel",
+    authMiddleware,
+    permit("CANCEL_APPOINTMENT"),
+    wrapAsync(appointmentController.cancelAppointment)
+);
 
-    //get all appointments D
-    router.get("/appointments",
-        authMiddleware,
-        permit("VIEW_APPOINTMENTS"),
-        wrapAsync(appointmentController.getAppointments)
-    );
-    
-    //Reschedule appointments D
+//get all appointments D
+router.get("/appointments",
+    authMiddleware,
+    permit("VIEW_APPOINTMENTS"),
+    wrapAsync(appointmentController.getAppointments)
+);
 
-    router.patch(
-        "/appointments/:id/reschedule",
-        authMiddleware,
-        permit("RESCHEDULE_APPOINTMENT"),
-        wrapAsync(appointmentController.rescheduleAppointment)
-    );
+//Reschedule appointments D
 
-    //Appointment Completed D
-    router.patch(
-        "/appointments/:id/complete",
-        authMiddleware,
-        permit("COMPLETE_APPOINTMENT"),
-        wrapAsync(appointmentController.completeAppointment)
-    );
+router.patch(
+    "/appointments/:id/reschedule",
+    authMiddleware,
+    permit("RESCHEDULE_APPOINTMENT"),
+    wrapAsync(appointmentController.rescheduleAppointment)
+);
 
-    //Patient Check in D
-    router.patch(
-        "/appointments/:id/check-in",
-        authMiddleware,
-        permit("CHECKIN_APPOINTMENT"),
-        wrapAsync(appointmentController.checkInAppointment)
-    );
+//Appointment Completed D
+router.patch(
+    "/appointments/:id/complete",
+    authMiddleware,
+    permit("COMPLETE_APPOINTMENT"),
+    wrapAsync(appointmentController.completeAppointment)
+);
 
-    //Appointment Noted Adding D
-    router.patch(
-        "/appointments/:id/notes",
-        authMiddleware,
-        permit("ADD_NOTES"),
-        wrapAsync(appointmentController.addAppointmentNotes)
-    );
+//Patient Check in D
+router.patch(
+    "/appointments/:id/check-in",
+    authMiddleware,
+    permit("CHECKIN_APPOINTMENT"),
+    wrapAsync(appointmentController.checkInAppointment)
+);
 
-    //get appointments in bulk D
-    router.get(
-        "/appointments/bulk",
-        authMiddleware,
-        permit("VIEW_BULK_APPOINTMENTS"),
-        wrapAsync(appointmentController.getBulkAppointments)
-    );
+//Appointment Noted Adding D
+router.patch(
+    "/appointments/:id/notes",
+    authMiddleware,
+    permit("ADD_NOTES"),
+    wrapAsync(appointmentController.addAppointmentNotes)
+);
+
+//get appointments in bulk D
+router.get(
+    "/appointments/bulk",
+    authMiddleware,
+    permit("VIEW_BULK_APPOINTMENTS"),
+    wrapAsync(appointmentController.getBulkAppointments)
+);
 
 //Doctor Break
-    //create Doctor Break 
-    router.post(
-        "/doctor-breaks",
-        authMiddleware,
-        permit("CREATE_DOCTOR_BREAK"),
-        validate(doctorBreakSchema),
-        wrapAsync(doctorBreakController.createBreak)
-    );
+//create Doctor Break 
+router.post(
+    "/doctor-breaks",
+    authMiddleware,
+    permit("CREATE_DOCTOR_BREAK"),
+    validate(doctorBreakSchema),
+    wrapAsync(doctorBreakController.createBreak)
+);
 
 
 //Doctor Holiday
-    //add holiday
-    router.post(
-        "/doctor-holidays",
-        authMiddleware,
-        permit("CREATE_HOLIDAY"),
-        validate(doctorHolidaySchema),
-        wrapAsync(doctorHolidayController.createHoliday)
-    );  
+//add holiday
+router.post(
+    "/doctor-holidays",
+    authMiddleware,
+    permit("CREATE_HOLIDAY"),
+    validate(doctorHolidaySchema),
+    wrapAsync(doctorHolidayController.createHoliday)
+);
 
-    //get holidays
-    router.get(
-        "/doctor-holidays",
-        authMiddleware,
-        permit("VIEW_HOLIDAY"),
-        wrapAsync(doctorHolidayController.getHoliday)
-    );
+//get holidays
+router.get(
+    "/doctor-holidays",
+    authMiddleware,
+    permit("VIEW_HOLIDAY"),
+    wrapAsync(doctorHolidayController.getHoliday)
+);
 
-    //delete holidays
-    router.delete(
-        "/doctor-holidays/:id",
-        authMiddleware,
-        permit("DELETE_HOLIDAY"),
-        wrapAsync(doctorHolidayController.deleteHoliday)
-    );
+//delete holidays
+router.delete(
+    "/doctor-holidays/:id",
+    authMiddleware,
+    permit("DELETE_HOLIDAY"),
+    wrapAsync(doctorHolidayController.deleteHoliday)
+);
 
-    //bulk delete holidays
-    router.post(
-        "/doctor-holidays/bulk-delete",
-        authMiddleware,
-        permit("DELETE_HOLIDAY"),
-        wrapAsync(doctorHolidayController.bulkDeleteHolidays)
-    );
+//bulk delete holidays
+router.post(
+    "/doctor-holidays/bulk-delete",
+    authMiddleware,
+    permit("DELETE_HOLIDAY"),
+    wrapAsync(doctorHolidayController.bulkDeleteHolidays)
+);
 
 
 //Audit Log
-    router.get(
-        "/audit-logs",
-        authMiddleware,
-        permit("VIEW_AUDIT_LOGS"),
-        auditController.getLogs
-    );
+router.get(
+    "/audit-logs",
+    authMiddleware,
+    permit("VIEW_AUDIT_LOGS"),
+    auditController.getLogs
+);
 
 
 // router.get("/profile",authMiddleware,(req,res)=>{
@@ -326,7 +333,7 @@ router.get(
 //         res.json({ message: "Welcome Admin" });
 //     }
 // );
-module.exports=router;
+module.exports = router;
 // START TRANSACTION
 
 // Do Operation A

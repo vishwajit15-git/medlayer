@@ -27,20 +27,25 @@ const DoctorSchedule = () => {
   const [showManageHolidays, setShowManageHolidays] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ show: false, range: null, mode: 'ENTIRE' });
   const [selectedDaysForDelete, setSelectedDaysForDelete] = useState([]);
-  const fetchDoctors = async () => {
-    try {
-      const res = await api.get('/auth/doctors');
-      const docs = res.data.doctors || res.data || [];
-      setDoctors(docs);
-      if (docs.length > 0) setSelectedDoctor(docs[0]._id);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchDoctors();
-  }, []);
+    const initDoctors = async () => {
+      if (user?.role === 'doctor' && user?.doctorId) {
+        setSelectedDoctor(user.doctorId);
+        return;
+      }
+      try {
+        const res = await api.get('/auth/doctors');
+        const docs = res.data.doctors || res.data || [];
+        setDoctors(docs);
+        if (docs.length > 0) setSelectedDoctor(docs[0]._id);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    if (user) {
+      initDoctors();
+    }
+  }, [user]);
 
   const fetchSchedule = useCallback(async () => {
     if (!selectedDoctor || !targetDate) return;
@@ -161,15 +166,17 @@ const DoctorSchedule = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', height: '40px' }}>
-          <div style={{ width: '200px', height: '100%' }}>
-            <CustomSelect
-              value={selectedDoctor}
-              onChange={(val) => setSelectedDoctor(val)}
-              placeholder="Select Doctor"
-              options={doctors.map(d => ({ value: d._id, label: d.name }))}
-              triggerStyle={{ borderRadius: '2rem' }}
-            />
-          </div>
+          {user?.role !== 'doctor' && (
+            <div style={{ width: '200px', height: '100%' }}>
+              <CustomSelect
+                value={selectedDoctor}
+                onChange={(val) => setSelectedDoctor(val)}
+                placeholder="Select Doctor"
+                options={doctors.map(d => ({ value: d._id, label: d.name }))}
+                triggerStyle={{ borderRadius: '2rem' }}
+              />
+            </div>
+          )}
           <div style={{ width: '200px', height: '100%' }}>
             <CustomDatePicker
               value={targetDate}
@@ -177,7 +184,7 @@ const DoctorSchedule = () => {
               placeholder="Select Date"
             />
           </div>
-          {(user?.role === 'admin' || user?.role === 'doctor') && (
+          {user?.role === 'admin' && (
             <button className="btn btn-primary" onClick={() => setShowOverride(true)} style={{ width: '200px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', borderRadius: '2rem', fontSize: '0.9rem' }}>
               <Plus size={18} />Add Holiday / Break
             </button>
@@ -222,7 +229,7 @@ const DoctorSchedule = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Palmtree size={20} color="var(--accent-primary)" />
-            {user?.role === 'receptionist' ? 'Holidays' : 'Manage Holidays'}
+            {user?.role === 'admin' ? 'Manage Holidays' : 'Upcoming Holidays'}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>{holidays.length} Range(s)</span>
@@ -245,7 +252,7 @@ const DoctorSchedule = () => {
                         <div style={{ fontWeight: 600 }}>{start} {range.length > 1 ? `- ${end}` : ''}</div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{range.length} day(s)</div>
                       </div>
-                      {(user?.role === 'admin' || user?.role === 'doctor') && (
+                      {user?.role === 'admin' && (
                         <button
                           onClick={() => setDeleteModal({ show: true, range, mode: 'ENTIRE' })}
                           style={{ background: 'var(--error-bg)', color: 'var(--error)', border: '1px solid var(--error)', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

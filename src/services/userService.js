@@ -47,10 +47,29 @@ const createUser = async (data, user) => {
 };
 
 const getUsers = async (user) => {
-  if (user.role !== "admin") {
-    throw new ExpressError("Only admin can view users", 403);
+  if (user.role !== 'admin') {
+    throw new ExpressError('Only admin can view users', 403);
   }
   return await User.find({ clinicId: user.clinicId }).select('-passwordHash');
 };
 
-module.exports = { createUser, getUsers };
+const deleteUser = async (targetUserId, requestingUser) => {
+  if (requestingUser.role !== 'admin') {
+    throw new ExpressError('Only admin can delete users', 403);
+  }
+
+  if (targetUserId === requestingUser.id) {
+    throw new ExpressError('You cannot delete your own account', 400);
+  }
+
+  const target = await User.findOne({ _id: targetUserId, clinicId: requestingUser.clinicId });
+
+  if (!target) {
+    throw new ExpressError('User not found in this clinic', 404);
+  }
+
+  await User.deleteOne({ _id: targetUserId });
+  return { message: 'User deleted successfully' };
+};
+
+module.exports = { createUser, getUsers, deleteUser };

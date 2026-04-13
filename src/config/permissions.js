@@ -1,12 +1,12 @@
 const PERMISSIONS={
   CREATE_APPOINTMENT:["admin", "receptionist"],
     CANCEL_APPOINTMENT:["admin", "receptionist"],
-    CHECKIN_APPOINTMENT:["admin", "receptionist", "doctor"],
+    CHECKIN_APPOINTMENT:["admin", "receptionist"],
     COMPLETE_APPOINTMENT:["admin", "receptionist", "doctor"],
     ADD_NOTES:["admin", "receptionist", "doctor"],
 
-    VIEW_APPOINTMENTS: ["admin", "receptionist"],
-    VIEW_BULK_APPOINTMENTS: ["admin"],
+    VIEW_APPOINTMENTS: ["admin", "receptionist", "doctor"],
+    VIEW_BULK_APPOINTMENTS: ["admin", "receptionist", "doctor"],
     RESCHEDULE_APPOINTMENT: ["admin", "receptionist"],
 
     VIEW_AVAILABLE_SLOTS: ["admin", "receptionist"],
@@ -26,7 +26,7 @@ const PERMISSIONS={
     CREATE_PATIENT:["admin", "receptionist"],
     UPDATE_PATIENT:["admin", "receptionist"],
     DELETE_PATIENT:["admin"],
-    VIEW_PATIENT:["admin", "receptionist"],
+    VIEW_PATIENT:["admin", "receptionist", "doctor"],
 
     CREATE_USER:["admin"],
     UPDATE_USER:["admin"],

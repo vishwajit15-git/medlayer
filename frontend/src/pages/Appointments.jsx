@@ -43,33 +43,43 @@ const Appointments = () => {
     setCalendarView({ year, month });
     try {
       const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
-      const endStr = new Date(year, month, 0).toISOString().split('T')[0];
-      const res = await api.get(`/auth/appointments/bulk?startDate=${startStr}&endDate=${endStr}`);
+      const lastDay = new Date(year, month, 0).getDate();
+      const endStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      // If logged in as a doctor, strictly filter to display only their own calendar dots
+      let queryStr = `?startDate=${startStr}&endDate=${endStr}`;
+      if (user?.role === 'doctor' && user?.doctorId) {
+        queryStr += `&doctorId=${user.doctorId}`;
+      }
+
+      const res = await api.get(`/auth/appointments/bulk${queryStr}`);
       const apps = res.data.appointments || res.data || [];
       const activeApps = apps.filter(a => ['BOOKED', 'CHECKED_IN'].includes(a.status));
 
-      // Convert UTC db dates to local YYYY-MM-DD to avoid timezone shift misalignments
       const uniqueDates = [...new Set(activeApps.map(a => {
         const d = new Date(a.appointmentDate);
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }))];
 
       const today = new Date();
-      // Ensure local timezone matching instead of strict ISO UTC to prevent timezone offsets
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+      // Only hide dots for past dates; correctly show dots for all future months
       const futureDates = uniqueDates.filter(d => d >= todayStr);
       setMarkedDates(futureDates);
     } catch (err) {
       console.error("Failed to fetch marked dates", err);
     }
-  }, []);
+  }, [user]);
 
   const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       let query = `?date=${filterDate}`;
       if (filterStatus) query += `&status=${filterStatus}`;
+      if (user?.role === 'doctor' && user?.doctorId) {
+        query += `&doctorId=${user.doctorId}`;
+      }
       let res = await api.get(`/auth/appointments${query}`);
 
       let fetched = res.data.appointments || res.data;
@@ -83,7 +93,7 @@ const Appointments = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterDate, filterStatus]);
+  }, [filterDate, filterStatus, user]);
 
   useEffect(() => {
     fetchAppointments();
@@ -142,7 +152,18 @@ const Appointments = () => {
       setShowBooking(false);
       setBookingData({ doctorId: '', patientId: '', date: '', time: '' });
       fetchAppointments();
+
+      // Always refresh the currently viewed calendar month
       fetchMarkedDates(calendarView.year, calendarView.month);
+
+      // Also refresh the booked appointment's month if it's different
+      // (handles booking 2-3 months ahead while viewing a different month)
+      if (bookingData.date) {
+        const [bYear, bMonth] = bookingData.date.split('-').map(Number);
+        if (bYear !== calendarView.year || bMonth !== calendarView.month) {
+          fetchMarkedDates(bYear, bMonth);
+        }
+      }
     } catch (err) {
       setBookingError(err.response?.data?.message || 'Failed to book appointment. Please check availability.');
     } finally {
@@ -313,7 +334,7 @@ const Appointments = () => {
                     </td>
                     <td style={{ padding: '1rem 1.5rem', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
 
-                      {apt.status === 'BOOKED' && (
+                      {apt.status === 'BOOKED' && user?.role !== 'doctor' && (
                         <>
                           <button className="btn" style={{ padding: '0.5rem', color: 'var(--checkin-color)' }} onClick={() => handleAction(apt._id, 'check-in')} title="Check In">
                             <LogIn size={18} />
@@ -327,6 +348,12 @@ const Appointments = () => {
                         </>
                       )}
 
+                      {apt.status === 'BOOKED' && user?.role === 'doctor' && (
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', fontStyle: 'italic', paddingRight: '0.5rem' }}>
+                          <Clock size={14} /> Awaiting Arrival
+                        </div>
+                      )}
+
                       {apt.status === 'CHECKED_IN' && (
                         <button className="btn" style={{ padding: '0.5rem', color: 'var(--success)' }} onClick={() => handleAction(apt._id, 'complete')} title="Mark Completed">
                           <CheckCircle2 size={18} />
@@ -337,6 +364,12 @@ const Appointments = () => {
                         <button className="btn" style={{ padding: '0.5rem', color: 'var(--accent-primary)' }} onClick={() => { setSelectedAppt(apt); setNotesText(apt.notes || ''); setShowNotes(true); }} title="Consultation Notes">
                           <FileText size={18} />
                         </button>
+                      )}
+
+                      {(apt.status === 'CANCELLED' || (apt.status === 'NO_SHOW')) && (
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic', paddingRight: '0.5rem' }}>
+                          {apt.status === 'CANCELLED' ? 'Cancelled' : 'No Show'}
+                        </div>
                       )}
 
                     </td>

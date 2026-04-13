@@ -9,16 +9,16 @@ const { date } = require("joi");
 const { all } = require("../routes/authRoutes");
 const appointmentSchema = require("../validators/appointmentValidator");
 const Clinic = require("../models/Clinic");
-const {logAction}=require("./auditLogService");
+const { logAction } = require("./auditLogService");
 
 //Helper function:check if it is past appointment
-const isPastAppointment=(date,time)=>{
-  const [h,m]=time.split(":").map(Number);
+const isPastAppointment = (date, time) => {
+  const [h, m] = time.split(":").map(Number);
 
-  const appointmentDateTime=new Date(date);
-  appointmentDateTime.setHours(h,m,0,0);
+  const appointmentDateTime = new Date(date);
+  appointmentDateTime.setHours(h, m, 0, 0);
 
-  return appointmentDateTime< new Date();
+  return appointmentDateTime < new Date();
 };
 
 //Helper: Convert "HH:MM" → minutes for comparisons
@@ -56,8 +56,8 @@ const generateSlots = (start, end) => {
 };
 
 //helper function get days of week
-const getDayofWeek=(date)=>{
-  const days=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+const getDayofWeek = (date) => {
+  const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   return days[new Date(date).getDay()];
 };
 
@@ -79,13 +79,13 @@ const createAppointment = async (data, user) => {
   const normalizedDate = new Date(appointmentDate);
   normalizedDate.setHours(0, 0, 0, 0);
 
-   //fetch clinic for checking if it lies in/outside the clinic working hours
-  const clinic=await Clinic.findById(user.clinicId);
+  //fetch clinic for checking if it lies in/outside the clinic working hours
+  const clinic = await Clinic.findById(user.clinicId);
 
-  const day=getDayofWeek(normalizedDate);
+  const day = getDayofWeek(normalizedDate);
 
-  if(!clinic.settings.workingDays.includes(day)){
-    throw new ExpressError("Clinic closed on this day",400);
+  if (!clinic.settings.workingDays.includes(day)) {
+    throw new ExpressError("Clinic closed on this day", 400);
   }
 
   // Verify doctor belongs to clinic
@@ -99,29 +99,29 @@ const createAppointment = async (data, user) => {
     throw new ExpressError("Doctor not found in this clinic", 404);
   }
 
-  if(!clinic || !clinic.workingHours){
-    throw new ExpressError("Clinic working hours not configured",400);
+  if (!clinic || !clinic.workingHours) {
+    throw new ExpressError("Clinic working hours not configured", 400);
   }
 
   //validate the slot inside the working hours 
-  const clinicStart=toMinutes(clinic.workingHours.startTime);
-  const clinicEnd=toMinutes(clinic.workingHours.endTime);
-  const slotMinutes=toMinutes(appointmentTime);
+  const clinicStart = toMinutes(clinic.workingHours.startTime);
+  const clinicEnd = toMinutes(clinic.workingHours.endTime);
+  const slotMinutes = toMinutes(appointmentTime);
 
   if (slotMinutes < clinicStart || slotMinutes >= clinicEnd) {
     throw new ExpressError("Slot outside clinic working hours", 400);
   }
 
   //holiday check 
-  const holiday=await DoctorHoliday.findOne({
+  const holiday = await DoctorHoliday.findOne({
     doctorId,
-    clinicId:user.clinicId,
-    date:normalizedDate,
-    isDeleted:false
+    clinicId: user.clinicId,
+    date: normalizedDate,
+    isDeleted: false
   });
 
-  if(holiday){
-    throw new ExpressError("Doctor is on Holiday",400)
+  if (holiday) {
+    throw new ExpressError("Doctor is on Holiday", 400)
   }
 
   // Ensure doctor availability configured 
@@ -150,21 +150,21 @@ const createAppointment = async (data, user) => {
 
 
   //break check ,wheater the patient booked the slot that is doctors break slot
-  const breaks=await DoctorBreak.find({
+  const breaks = await DoctorBreak.find({
     doctorId,
-    clinicId:user.clinicId,
-    date:normalizedDate,
-    isDeleted:false
+    clinicId: user.clinicId,
+    date: normalizedDate,
+    isDeleted: false
   });
 
-  for(const br of breaks){
-    const breakSlots=generateSlots(br.startTime,br.endTime);
+  for (const br of breaks) {
+    const breakSlots = generateSlots(br.startTime, br.endTime);
 
-    if(breakSlots.includes(appointmentTime)){
-      throw new ExpressError("Slot you are booking falls under Doctor Break",400);
+    if (breakSlots.includes(appointmentTime)) {
+      throw new ExpressError("Slot you are booking falls under Doctor Break", 400);
     }
   }
-  
+
   // Verify patient 
   const patient = await Patient.findOne({
     _id: patientId,
@@ -283,19 +283,19 @@ const getAvailableSlots = async (doctorId, date, user) => {
   const breakSet = new Set(breakSlots);
 
   //Is there leave for doctor
-  const holiday=await DoctorHoliday.findOne({
+  const holiday = await DoctorHoliday.findOne({
     doctorId,
-    clinicId:user.clinicId,
-    date:normalizedDate,
-    isDeleted:false
+    clinicId: user.clinicId,
+    date: normalizedDate,
+    isDeleted: false
   })
 
-  if(holiday){
-    return{
+  if (holiday) {
+    return {
       doctorId,
       date,
-      availableSlots:[],
-      message:"Doctor is on holiday"
+      availableSlots: [],
+      message: "Doctor is on holiday"
     };
   }
 
@@ -374,25 +374,25 @@ const cancelAppointment = async (appointmentId, user) => {
   }
 
   //cannot cancel if time of slot has passed
-  if(isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
-    throw new ExpressError("Cannot cancel Passed Appointment",400);
+  if (isPastAppointment(appointment.appointmentDate, appointment.appointmentTime)) {
+    throw new ExpressError("Cannot cancel Passed Appointment", 400);
   }
 
   appointment.status = "CANCELLED";
   await appointment.save();
 
   //action i.e done
-    const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
-    
-    await logAction({
-      user,
-      action:"CANCEL_APPOINTMENT",
-      entity:"Appointment",
-      entityId:appointment._id,
-      description: `Cancelled appointment for ${populatedAppt.patientId.name}`
-    });
+  const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
 
-    return appointment;
+  await logAction({
+    user,
+    action: "CANCEL_APPOINTMENT",
+    entity: "Appointment",
+    entityId: appointment._id,
+    description: `Cancelled appointment for ${populatedAppt.patientId.name}`
+  });
+
+  return appointment;
 };
 
 
@@ -412,27 +412,33 @@ const getAppointments = async (query, user) => {
 
   //Default: today's booked appointments 
   if (!date && !doctorId && !status) {
-
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    filter.appointmentDate = today;
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const dayEnd   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+    filter.appointmentDate = { $gte: dayStart, $lte: dayEnd };
     filter.status = "BOOKED";
   }
 
 
   //Filter by date
   if (date) {
-
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
-
-    filter.appointmentDate = normalizedDate;
+    const d = new Date(date);
+    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    const dayEnd   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+    filter.appointmentDate = { $gte: dayStart, $lte: dayEnd };
   }
 
 
-  // Filter by doctor
-  if (doctorId) {
+  // Security Enforcement
+  if (user.role === 'doctor') {
+    let currentDocId = user.doctorId;
+    if (!currentDocId) {
+      const dbUser = await require("../models/User").findById(user.id);
+      currentDocId = dbUser?.doctorId;
+    }
+    if (!currentDocId) return { total: 0, appointments: [], page, limit, totalPages: 0 };
+    filter.doctorId = currentDocId;
+  } else if (doctorId) {
     filter.doctorId = doctorId;
   }
 
@@ -454,9 +460,9 @@ const getAppointments = async (query, user) => {
 
 
   //change the status of appointment
-  for(const appt of appointments){
-    if(appt.status === "BOOKED" && isPastAppointment(appt.appointmentDate,appt.appointmentTime)){
-      appt.status="NO_SHOW";
+  for (const appt of appointments) {
+    if (appt.status === "BOOKED" && isPastAppointment(appt.appointmentDate, appt.appointmentTime)) {
+      appt.status = "NO_SHOW";
       await appt.save();
     }
   }
@@ -486,9 +492,9 @@ const rescheduleAppointment = async (appointmentId, data, user) => {
   if (!appointment) {
     throw new ExpressError("Appointment not found", 404);
   }
-  
-  if(isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
-    throw new ExpressError("Cannot reschedule Passed Appointment",400);
+
+  if (isPastAppointment(appointment.appointmentDate, appointment.appointmentTime)) {
+    throw new ExpressError("Cannot reschedule Passed Appointment", 400);
   }
 
   if (appointment.status !== "BOOKED") {
@@ -530,15 +536,15 @@ const rescheduleAppointment = async (appointmentId, data, user) => {
 };
 
 //Appointment "COMPLETED" API
-const completeAppointment=async(id,user)=>{
-  const appointment=await Appointment.findOne({
-    _id:id,
-    clinicId:user.clinicId,
-    isDeleted:false
+const completeAppointment = async (id, user) => {
+  const appointment = await Appointment.findOne({
+    _id: id,
+    clinicId: user.clinicId,
+    isDeleted: false
   });
 
-  if(!appointment){
-    throw new ExpressError("Appointment not found",404);
+  if (!appointment) {
+    throw new ExpressError("Appointment not found", 404);
   }
 
   if (!["BOOKED", "CHECKED_IN"].includes(appointment.status)) {
@@ -548,11 +554,11 @@ const completeAppointment=async(id,user)=>{
     );
   }
 
-  if(!isPastAppointment(appointment.appointmentDate,appointment.appointmentTime)){
-    throw new ExpressError("Cannot complete future Appointments",400);
+  if (!isPastAppointment(appointment.appointmentDate, appointment.appointmentTime)) {
+    throw new ExpressError("Cannot complete future Appointments", 400);
   }
 
-  appointment.status="COMPLETED";
+  appointment.status = "COMPLETED";
   await appointment.save();
 
   const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
@@ -568,61 +574,61 @@ const completeAppointment=async(id,user)=>{
 }
 
 //Appointment Check-In
-const checkInAppointment=async(id,user)=>{
-  const appointment=await Appointment.findOne({
-    _id:id,
-    clinicId:user.clinicId,
-    isDeleted:false
+const checkInAppointment = async (id, user) => {
+  const appointment = await Appointment.findOne({
+    _id: id,
+    clinicId: user.clinicId,
+    isDeleted: false
   });
 
-  if(!appointment){
-    throw new ExpressError("Appointment not found",404);
+  if (!appointment) {
+    throw new ExpressError("Appointment not found", 404);
   }
 
-  if(appointment.status !== "BOOKED"){
+  if (appointment.status !== "BOOKED") {
     throw new ExpressError("Only BOOKED appointments can be CHECKD_IN");
   }
 
-  appointment.status="CHECKED_IN";
+  appointment.status = "CHECKED_IN";
 
   await appointment.save();
 
   //action i.e done
-    const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
-    await logAction({
-      user,
-      action:"CHECKIN_APPOINTMENT",
-      entity:"Appointment",
-      entityId:appointment._id,
-      description: `Checked in patient ${populatedAppt.patientId.name}`
-    });
+  const populatedAppt = await Appointment.findById(appointment._id).populate("patientId", "name");
+  await logAction({
+    user,
+    action: "CHECKIN_APPOINTMENT",
+    entity: "Appointment",
+    entityId: appointment._id,
+    description: `Checked in patient ${populatedAppt.patientId.name}`
+  });
 
   return appointment;
 }
 
 //ADD APPOINTMENT NOTES
-const addAppointmentNotes=async (id,data,user)=>{
-  const {notes}=data;
+const addAppointmentNotes = async (id, data, user) => {
+  const { notes } = data;
 
-  if(!notes || notes.trim()=== ""){
-    throw new ExpressError("Notes cannot be empty",400);
+  if (!notes || notes.trim() === "") {
+    throw new ExpressError("Notes cannot be empty", 400);
   }
 
-  const appointment=await Appointment.findOne({
-    _id:id,
-    clinicId:user.clinicId,
-    isDeleted:false
+  const appointment = await Appointment.findOne({
+    _id: id,
+    clinicId: user.clinicId,
+    isDeleted: false
   });
 
-  if(!appointment){
-    throw new ExpressError("Appointment not found",404);
+  if (!appointment) {
+    throw new ExpressError("Appointment not found", 404);
   }
 
-  if(appointment.status !== "COMPLETED"){
-    throw new ExpressError("Notes can be added only to COMPLETED appointments",400);
+  if (appointment.status !== "COMPLETED") {
+    throw new ExpressError("Notes can be added only to COMPLETED appointments", 400);
   }
 
-  appointment.notes=notes.trim();
+  appointment.notes = notes.trim();
   await appointment.save();
 
   await logAction({
@@ -663,7 +669,7 @@ const getDoctorSchedule = async (doctorId, date, user) => {
       schedule: [],
       message: "Clinic closed"
     };
-  }  
+  }
 
   //check holiday (EARLY EXIT)
   const holiday = await DoctorHoliday.findOne({
@@ -767,46 +773,55 @@ const getDoctorSchedule = async (doctorId, date, user) => {
 };
 
 //GET BULK APPOINTMENT LISTING it is done for exporting the appointments in bulk ex for data analytics
-const getBulkAppointments=async(query,user)=>{
-  let {startDate,endDate,doctorId,status}=query;
+const getBulkAppointments = async (query, user) => {
+  let { startDate, endDate, doctorId, status } = query;
 
-  if(!startDate || !endDate){
-    throw new ExpressError("StartDate and EndDate required",400);
+  if (!startDate || !endDate) {
+    throw new ExpressError("StartDate and EndDate required", 400);
   }
 
-  const start=new Date(startDate);
-  const end=new Date(endDate);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
-  start.setHours(0,0,0,0);
-  end.setHours(23,59,59,999);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
 
-  const filter={
-    clinicId:user.clinicId,
-    isDeleted:false,
-    appointmentDate:{
-      $gte:start,
-      $lte:end
+  const filter = {
+    clinicId: user.clinicId,
+    isDeleted: false,
+    appointmentDate: {
+      $gte: start,
+      $lte: end
     }
   };
 
-  if(doctorId){
-    filter.doctorId=doctorId;
+  // Security Enforcement
+  if (user.role === 'doctor') {
+    let currentDocId = user.doctorId;
+    if (!currentDocId) {
+      const dbUser = await require("../models/User").findById(user.id);
+      currentDocId = dbUser?.doctorId;
+    }
+    if (!currentDocId) return { total: 0, appointments: [] };
+    filter.doctorId = currentDocId;
+  } else if (doctorId) {
+    filter.doctorId = doctorId;
   }
 
-  if(status){
-    filter.status=status;
+  if (status) {
+    filter.status = status;
   }
 
-  const appointments=await Appointment.find(filter)
-    .populate("doctorId","name specialization")
-    .populate("clinicId","name age")
-    .sort({appointmentDate:1,appointmentTime:1})
+  const appointments = await Appointment.find(filter)
+    .populate("doctorId", "name specialization")
+    .populate("clinicId", "name age")
+    .sort({ appointmentDate: 1, appointmentTime: 1 })
     .limit(500)  //this limit for one time how many appointments fetched
 
   return {
-    total:appointments.length,
+    total: appointments.length,
     appointments
-  };  
+  };
 }
 
 module.exports = {

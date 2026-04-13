@@ -111,7 +111,9 @@ const PatientList = () => {
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Global ID</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Full Name</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Age</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+                  {user?.role !== 'doctor' && (
+                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -125,18 +127,20 @@ const PatientList = () => {
                       {patient.name}
                     </td>
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)' }}>{patient.age}</td>
-                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
-                      {(user?.role === 'admin' || user?.role === 'receptionist') && (
-                        <button 
-                          onClick={() => handleDelete(patient._id)}
-                          className="btn"
-                          style={{ padding: '0.5rem', color: 'var(--error)' }}
-                          title="Remove Patient"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
-                    </td>
+                    {user?.role !== 'doctor' && (
+                      <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                        {(user?.role === 'admin' || user?.role === 'receptionist') && (
+                          <button 
+                            onClick={() => handleDelete(patient._id)}
+                            className="btn"
+                            style={{ padding: '0.5rem', color: 'var(--error)' }}
+                            title="Remove Patient"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

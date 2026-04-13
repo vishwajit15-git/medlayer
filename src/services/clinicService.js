@@ -96,7 +96,8 @@ const refreshAccessToken = async (refreshToken) => {
     const payload = {
         id: user._id,
         clinicId: user.clinicId,
-        role: user.role
+        role: user.role,
+        doctorId: user.doctorId || null
     };
 
     const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, {
