@@ -33,18 +33,20 @@ const Login = () => {
           <Activity size={40} className="text-accent-primary" style={{ color: 'var(--accent-primary)', marginBottom: '1rem' }} />
           <h2>Welcome Back</h2>
           <p className="text-muted" style={{ marginTop: '0.5rem' }}>
-            {loginRole === 'admin' ? 'Login to your Clinic Admin Dashboard' : 'Login to your Front Desk Reception Portal'}
+            {loginRole === 'admin' ? 'Login to your Clinic Admin Dashboard' :
+              loginRole === 'receptionist' ? 'Login to your Front Desk Reception Portal' :
+                'Login to your Doctor Portal'}
           </p>
         </div>
 
         <div style={{ display: 'flex', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', padding: '0.25rem', marginBottom: '2rem' }}>
-          <button 
+          <button
             type="button"
             onClick={() => setLoginRole('admin')}
-            style={{ 
-              flex: 1, 
-              padding: '0.75rem', 
-              border: 'none', 
+            style={{
+              flex: 1,
+              padding: '0.75rem',
+              border: 'none',
               background: loginRole === 'admin' ? 'var(--bg-secondary)' : 'transparent',
               color: loginRole === 'admin' ? 'var(--text-primary)' : 'var(--text-secondary)',
               borderRadius: 'var(--radius-md) 0 0 var(--radius-md)',
@@ -55,13 +57,13 @@ const Login = () => {
           >
             Admin
           </button>
-          <button 
+          <button
             type="button"
             onClick={() => setLoginRole('receptionist')}
-            style={{ 
-              flex: 1, 
-              padding: '0.75rem', 
-              border: 'none', 
+            style={{
+              flex: 1,
+              padding: '0.75rem',
+              border: 'none',
               background: loginRole === 'receptionist' ? 'var(--bg-secondary)' : 'transparent',
               color: loginRole === 'receptionist' ? 'var(--text-primary)' : 'var(--text-secondary)',
               borderRadius: '0',
@@ -72,13 +74,13 @@ const Login = () => {
           >
             Receptionist
           </button>
-          <button 
+          <button
             type="button"
             onClick={() => setLoginRole('doctor')}
-            style={{ 
-              flex: 1, 
-              padding: '0.75rem', 
-              border: 'none', 
+            style={{
+              flex: 1,
+              padding: '0.75rem',
+              border: 'none',
               background: loginRole === 'doctor' ? 'var(--bg-secondary)' : 'transparent',
               color: loginRole === 'doctor' ? 'var(--text-primary)' : 'var(--text-secondary)',
               borderRadius: '0 var(--radius-md) var(--radius-md) 0',
@@ -100,18 +102,22 @@ const Login = () => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Email Address</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={loginRole === 'admin' ? "admin@clinic.com" : "receptionist@clinic.com"}
+              placeholder={
+                loginRole === 'admin' ? "admin@clinic.com" :
+                  loginRole === 'receptionist' ? "receptionist@clinic.com" :
+                    "doctor@clinic.com"
+              }
             />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
