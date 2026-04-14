@@ -22,6 +22,10 @@ const PatientList = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const LIMIT = 10;
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -29,12 +33,21 @@ const PatientList = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchPatients = useCallback(async (query = '') => {
+  const fetchPatients = useCallback(async (query = '', currentPage = 1) => {
     try {
       setLoading(true);
-      const endpoint = query ? `/auth/patients/search?query=${encodeURIComponent(query)}` : '/auth/patients';
-      const res = await api.get(endpoint);
-      setPatients(res.data.patients || res.data || []);
+      if (query) {
+        // Search doesn't paginate – returns top 10 matches
+        const res = await api.get(`/auth/patients/search?query=${encodeURIComponent(query)}`);
+        setPatients(res.data.patients || []);
+        setTotalPages(1);
+        setTotal(res.data.patients?.length || 0);
+      } else {
+        const res = await api.get(`/auth/patients?page=${currentPage}&limit=${LIMIT}`);
+        setPatients(res.data.patients || []);
+        setTotalPages(res.data.totalPages || 1);
+        setTotal(res.data.total || 0);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,9 +55,16 @@ const PatientList = () => {
     }
   }, []);
 
+  // Reset to page 1 whenever search changes
   useEffect(() => {
-    fetchPatients(debouncedSearch);
+    setPage(1);
+    fetchPatients(debouncedSearch, 1);
   }, [debouncedSearch, fetchPatients]);
+
+  // Re-fetch when page changes (no search active)
+  useEffect(() => {
+    if (!debouncedSearch) fetchPatients('', page);
+  }, [page]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to remove this patient?')) return;
@@ -64,7 +84,7 @@ const PatientList = () => {
       await api.post('/auth/patients', { name: formData.name, age: Number(formData.age) });
       setShowModal(false);
       setFormData({ name: '', age: '' });
-      fetchPatients(debouncedSearch);
+      fetchPatients(debouncedSearch, page);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create patient');
     } finally {
@@ -152,6 +172,44 @@ const PatientList = () => {
                 <p>No query results dynamically matched.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!debouncedSearch && totalPages > 1 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '1rem 1.5rem', borderTop: '1px solid var(--border-subtle)',
+            background: 'var(--bg-secondary)'
+          }}>
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Showing {((page - 1) * LIMIT) + 1}–{Math.min(page * LIMIT, total)} of {total} patients
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}
+              >
+                ← Prev
+              </button>
+              <span style={{
+                padding: '0.4rem 1rem', background: 'var(--bg-tertiary)',
+                borderRadius: 'var(--radius-md)', fontSize: '0.875rem', fontWeight: 600,
+                color: 'var(--text-primary)'
+              }}>
+                {page} / {totalPages}
+              </span>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}
+              >
+                Next →
+              </button>
+            </div>
           </div>
         )}
       </div>

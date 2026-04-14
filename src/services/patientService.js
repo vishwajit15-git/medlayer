@@ -7,22 +7,36 @@ const createPatient = async (data, user) => {
     return await baseTenantService.create(Patient, data, user);
 };
 
-const getPatients = async (user) => {
-    let extraFilters = {};
+const getPatients = async (user, query = {}) => {
+    let { page = 1, limit = 10 } = query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const filter = {
+        clinicId: user.clinicId,
+        isDeleted: false
+    };
+
     if (user.role === 'doctor') {
         let currentDocId = user.doctorId;
         if (!currentDocId) {
             const dbUser = await require("../models/User").findById(user.id);
             currentDocId = dbUser?.doctorId;
         }
-        
-        if (!currentDocId) return []; // Should never happen unless DB corrupt
-        
+        if (!currentDocId) return { patients: [], total: 0, page, limit, totalPages: 0 };
+
         const appointments = await Appointment.find({ doctorId: currentDocId, clinicId: user.clinicId }).select('patientId');
         const patientIds = appointments.map(a => a.patientId);
-        extraFilters._id = { $in: patientIds };
+        filter._id = { $in: patientIds };
     }
-    return await baseTenantService.findAll(Patient, user, extraFilters);
+
+    const total = await Patient.countDocuments(filter);
+    const patients = await Patient.find(filter)
+        .sort({ name: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+    return { patients, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
 const deletePatient=async(id,user)=>{

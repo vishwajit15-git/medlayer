@@ -11,9 +11,8 @@ const createPatient = async (req, res) => {
 };
 
 const getPatients = async (req, res) => {
-    const patients = await patientService.getPatients(req.user);
-
-    return res.status(200).json({ patients });
+    const result = await patientService.getPatients(req.user, req.query);
+    return res.status(200).json(result);
 };
 
 const deletePatient=async (req,res)=>{
