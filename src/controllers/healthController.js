@@ -1,5 +1,4 @@
-const { status } = require("init");
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
 const basicHealth=async(req,res)=>{
     return res.status(200).json({
