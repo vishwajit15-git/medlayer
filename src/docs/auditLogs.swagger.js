@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: Audit Logs
- *   description:Audit Logging
+ *   description: Audit Logging
  */
 
 /**

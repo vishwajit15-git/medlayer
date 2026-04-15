@@ -17,7 +17,13 @@ app.use(sanitize);
 
 app.use(rateLimiter);
 
-app.use(logger)
+app.use(logger);
+
+// Basic root route so clicking the Render link directly doesn't show a 404
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'OK', message: 'MedLayer API is running natively.' });
+});
+
 app.use("/", routes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
