@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 // Create a central Axios instance
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080', // Backend does not use /api prefix
+  baseURL: API_URL, // Backend does not use /api prefix
   headers: {
     'Content-Type': 'application/json',
   },
@@ -36,7 +38,7 @@ api.interceptors.response.use(
           throw new Error('No refresh token available');
         }
 
-        const res = await axios.post('http://localhost:8080/auth/refresh', {
+        const res = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken: refreshToken
         });
         
