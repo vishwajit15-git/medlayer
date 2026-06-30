@@ -31,19 +31,19 @@ Navigate to **Staff Management**. First create the Receptionist, then the 12 Doc
 
 | Full Name | Role | Email | Password | Linked Doctor |
 | :--- | :--- | :--- | :--- | :--- |
-| Samwell Tarly | Receptionist | frontdesk@citadel.com | Pass@123 | *(None)* |
-| Dr. Maester Aemon | Doctor | aemon@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Qyburn | Doctor | qyburn@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Corlys Velaryon | Doctor | cvelaryon@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Rhaenyra Targaryen | Doctor | rtargaryen@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Alicent Hightower | Doctor | ahightower@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Daemon Targaryen | Doctor | dtargaryen@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Ser Duncan the Tall | Doctor | duncan@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Melisandre | Doctor | melisandre@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Otto Hightower | Doctor | ohightower@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Grand Maester Pycelle| Doctor | pycelle@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Viserys Targaryen | Doctor | vtargaryen@citadel.com | Pass@123 | *(Link later)* |
-| Dr. Aegon the Conqueror | Doctor | aegon.c@citadel.com | Pass@123 | *(Link later)* |
+| Samwell Tarly | Receptionist | frontdesk@citadel.com | 123456789 | *(None)* |
+| Dr. Maester Aemon | Doctor | aemon@citadel.com | 123456789 | *(Link later)* |
+| Dr. Qyburn | Doctor | qyburn@citadel.com | 123456789 | *(Link later)* |
+| Dr. Corlys Velaryon | Doctor | cvelaryon@citadel.com | 123456789 | *(Link later)* |
+| Dr. Rhaenyra Targaryen | Doctor | rtargaryen@citadel.com | 123456789 | *(Link later)* |
+| Dr. Alicent Hightower | Doctor | ahightower@citadel.com | 123456789 | *(Link later)* |
+| Dr. Daemon Targaryen | Doctor | dtargaryen@citadel.com | 123456789 | *(Link later)* |
+| Dr. Ser Duncan the Tall | Doctor | duncan@citadel.com | 123456789 | *(Link later)* |
+| Dr. Melisandre | Doctor | melisandre@citadel.com | 123456789 | *(Link later)* |
+| Dr. Otto Hightower | Doctor | ohightower@citadel.com | 123456789 | *(Link later)* |
+| Dr. Grand Maester Pycelle| Doctor | pycelle@citadel.com | 123456789 | *(Link later)* |
+| Dr. Viserys Targaryen | Doctor | vtargaryen@citadel.com | 123456789 | *(Link later)* |
+| Dr. Aegon the Conqueror | Doctor | aegon.c@citadel.com | 123456789 | *(Link later)* |
 
 ---
 
