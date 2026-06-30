@@ -109,7 +109,7 @@ const Appointments = () => {
     try {
       const [docRes, patRes] = await Promise.all([
         api.get('/auth/doctors'),
-        api.get('/auth/patients')
+        api.get('/auth/patients?limit=1000')
       ]);
       setDoctors(docRes.data.doctors || docRes.data || []);
       setPatients(patRes.data.patients || patRes.data || []);
