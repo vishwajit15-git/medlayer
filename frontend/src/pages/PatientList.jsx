@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import api from '../api/axios';
 import { Users, Plus, Trash2, Search, ActivitySquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 // Simple debounce utility hook could be placed here
 function useDebounce(value, delay) {
@@ -18,6 +19,7 @@ function useDebounce(value, delay) {
 
 const PatientList = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,8 +73,9 @@ const PatientList = () => {
     try {
       await api.delete(`/auth/patients/${id}`);
       setPatients(patients.filter(p => p._id !== id));
+      showToast('Patient removed successfully', 'success');
     } catch (err) {
-      alert('Failed to delete patient');
+      showToast('Failed to delete patient', 'error');
     }
   };
 
@@ -85,6 +88,7 @@ const PatientList = () => {
       setShowModal(false);
       setFormData({ name: '', age: '' });
       fetchPatients(debouncedSearch, page);
+      showToast('Patient registered successfully', 'success');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create patient');
     } finally {

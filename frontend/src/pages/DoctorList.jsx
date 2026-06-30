@@ -3,17 +3,19 @@ import { createPortal } from 'react-dom';
 import api from '../api/axios';
 import { UserRoundCog, Plus, Trash2, Clock, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import CustomTimePicker from '../components/CustomTimePicker';
 
 const DoctorList = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', specialiaztion: '', availability: [{ startTime: '09:00', endTime: '12:00' }]
+    name: '', specialization: '', availability: [{ startTime: '09:00', endTime: '12:00' }]
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -39,8 +41,9 @@ const DoctorList = () => {
     try {
       await api.delete(`/auth/doctors/${id}`);
       setDoctors(doctors.filter(d => d._id !== id));
+      showToast('Doctor deleted successfully', 'success');
     } catch (err) {
-      alert('Failed to delete doctor');
+      showToast('Failed to delete doctor', 'error');
     }
   };
 
@@ -69,13 +72,14 @@ const DoctorList = () => {
     try {
       const payload = {
         name: formData.name,
-        specialization: formData.specialization, // fixed typo from state
+        specialization: formData.specialization,
         availability: formData.availability
       };
       await api.post('/auth/doctors', payload);
       setShowModal(false);
       setFormData({ name: '', specialization: '', availability: [{ startTime: '09:00', endTime: '12:00' }] });
       fetchDoctors();
+      showToast('Doctor registered successfully', 'success');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create doctor');
     } finally {

@@ -3,12 +3,14 @@ import { createPortal } from 'react-dom';
 import api from '../api/axios';
 import { Calendar, Clock, AlertTriangle, Coffee, Palmtree, Plus, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomSelect from '../components/CustomSelect';
 import CustomTimePicker from '../components/CustomTimePicker';
 
 const DoctorSchedule = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [targetDate, setTargetDate] = useState(new Date().toISOString().split('T')[0]);
@@ -108,15 +110,16 @@ const DoctorSchedule = () => {
         idsToDelete = selectedDaysForDelete;
       }
 
-      if (idsToDelete.length === 0) return alert('No days selected');
+      if (idsToDelete.length === 0) return showToast('No days selected', 'warning');
 
       await api.post('/auth/doctor-holidays/bulk-delete', { ids: idsToDelete });
       setDeleteModal({ show: false, range: null, mode: 'ENTIRE' });
       setSelectedDaysForDelete([]);
       fetchSchedule();
       fetchHolidays();
+      showToast('Holidays deleted successfully', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete holidays');
+      showToast(err.response?.data?.message || 'Failed to delete holidays', 'error');
     }
   };
 
@@ -143,8 +146,9 @@ const DoctorSchedule = () => {
       setHolidayEnd('');
       fetchSchedule(); // Refresh grid
       fetchHolidays(); // Refresh holidays
+      showToast('Override applied successfully', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to apply override');
+      showToast(err.response?.data?.message || 'Failed to apply override', 'error');
     }
   };
 

@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom';
 import api from '../api/axios';
 import { Calendar, Plus, Clock, FileText, CheckCircle2, XCircle, LogIn, CalendarClock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomSelect from '../components/CustomSelect';
 
 const Appointments = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -227,8 +229,9 @@ const Appointments = () => {
       await api.patch(`/auth/appointments/${id}/${actionStr}`);
       fetchAppointments();
       fetchMarkedDates(calendarView.year, calendarView.month);
+      showToast(`${actionStr} successful`, 'success');
     } catch (err) {
-      alert(err.response?.data?.message || `Failed to ${actionStr}`);
+      showToast(err.response?.data?.message || `Failed to ${actionStr}`, 'error');
     }
   };
 
@@ -240,8 +243,9 @@ const Appointments = () => {
       setSelectedAppt(null);
       setNotesText('');
       fetchAppointments();
+      showToast('Notes saved successfully', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to submit notes');
+      showToast(err.response?.data?.message || 'Failed to submit notes', 'error');
     }
   };
 
