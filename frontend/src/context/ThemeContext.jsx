@@ -11,7 +11,7 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   // Read the theme that was already applied by the blocking script in index.html
   const [theme, setTheme] = useState(() => {
-    return document.documentElement.getAttribute('data-theme') || 'dark';
+    return document.documentElement.getAttribute('data-theme') || 'light';
   });
 
   const toggleTheme = useCallback(() => {
