@@ -1,4 +1,4 @@
-# 🏰 Grand Maester's Citadel (Multispeciality Hospital) - Extended Setup Data
+# 🏥 Global Apex Multispeciality Hospital - Extended Setup Data
 
 Use the tables below to manually populate your MedLayer system with a large-scale, enterprise-level dataset, featuring a legendary cast of 12 Doctors and 35 Patients from *Game of Thrones*, *House of the Dragon*, and *A Knight of the Seven Kingdoms*.
 
@@ -7,8 +7,8 @@ First, register the clinic from the `/register` page.
 
 | Field | Value |
 | :--- | :--- |
-| **Clinic Name** | Grand Maester Citadel |
-| **Master Admin Email** | admin@citadel.com |
+| **Clinic Name** | Global Apex Multispeciality |
+| **Master Admin Email** | admin@globalapex.com |
 | **Admin Password** | Admin@123 |
 
 *(After registering, log in as **Admin** with the credentials above to configure the rest).*
