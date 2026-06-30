@@ -111,8 +111,8 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
               left: `${coords.left}px`,
               width: `${coords.width}px`,
               background: 'var(--bg-elevated)', // Elevates properly in both themes
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '12px',
+              borderRadius: '0px',
+              borderBottom: '3px solid var(--accent-primary)',
               padding: '0.5rem',
               boxShadow: 'var(--shadow-dropdown)',
               zIndex: 9999,
@@ -135,7 +135,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
                 position: 'sticky', top: '-0.5rem', /* Stick to absolute top */
                 background: 'var(--bg-elevated)',
                 zIndex: 2,
-                borderRadius: '12px 12px 0 0', /* Match container rounding */
+                borderRadius: '0px',
                 display: 'flex', alignItems: 'center', gap: '0.6rem'
               }}>
                 <Search size={14} color="var(--text-tertiary)" style={{ flexShrink: 0 }} />
@@ -162,7 +162,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
                 onClick={() => handleSelect('')}
                 style={{
                   padding: '0.75rem 1rem',
-                  borderRadius: '8px',
+                  borderRadius: '0px',
                   cursor: 'pointer',
                   color: 'var(--text-secondary)',
                   transition: 'background 0.2s',
@@ -185,7 +185,7 @@ const CustomSelect = ({ value, onChange, options, placeholder = "Select an optio
                   onClick={() => handleSelect(opt.value)}
                   style={{
                     padding: '0.75rem 1rem',
-                    borderRadius: '8px',
+                    borderRadius: '0px',
                     cursor: 'pointer',
                     color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)',
                     fontWeight: isSelected ? 600 : 400,

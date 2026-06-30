@@ -284,12 +284,12 @@ const Appointments = () => {
                 { value: 'COMPLETED', label: 'Completed' },
                 { value: 'CANCELLED', label: 'Cancelled' }
               ]}
-              triggerStyle={{ borderRadius: '2rem', textAlign: 'center' }}
+              triggerStyle={{ textAlign: 'center' }}
             />
           </div>
 
           {(user?.role === 'admin' || user?.role === 'receptionist') && (
-            <button className="btn btn-primary" onClick={() => setShowBooking(true)} style={{ width: '200px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', borderRadius: '2rem', fontSize: '0.9rem' }}>
+            <button className="btn btn-primary" onClick={() => setShowBooking(true)} style={{ width: '200px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
               <Plus size={18} /> Book Slot
             </button>
           )}
