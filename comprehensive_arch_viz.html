@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedLayer – Comprehensive Architecture & Data Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-main: #030712;
+    --bg-card: rgba(17, 24, 39, 0.7);
+    --bg-card-hover: rgba(31, 41, 55, 0.9);
+    --border-color: rgba(59, 130, 246, 0.2);
+    --border-hover: rgba(59, 130, 246, 0.6);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    
+    /* Brand Colors */
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-pink: #ec4899;
+
+    --glow-blue: 0 0 25px rgba(59,130,246,0.4);
+    --glow-green: 0 0 25px rgba(16,185,129,0.4);
+    --glow-purple: 0 0 25px rgba(139,92,246,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Utility Classes */
+  .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+  .glass-panel {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+  }
+  .glass-panel:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Typography */
+  h1, h2, h3 { font-weight: 700; line-height: 1.2; }
+  .gradient-text {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .mono-text { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+  
+  /* Header */
+  .hero {
+    text-align: center;
+    padding: 4rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+    z-index: -1;
+  }
+  .hero-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem; letter-spacing: -0.02em; }
+  .hero-subtitle { font-size: 1.2rem; color: var(--text-secondary); max-width: 800px; margin: 0 auto; }
+
+  /* Section Styles */
+  .section-header {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-icon {
+    font-size: 2rem;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  /* --- ARCHITECTURE DIAGRAM (The Big Picture) --- */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 250px 1fr 300px;
+    gap: 2rem;
+    position: relative;
+  }
+  @media (max-width: 1024px) {
+    .arch-grid { grid-template-columns: 1fr; }
+  }
+
+  .arch-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .arch-column-title {
+    text-align: center;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  /* Node Styles */
+  .node {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+    z-index: 2;
+  }
+  .node:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-blue);
+    box-shadow: var(--glow-blue);
+  }
+  .node.green:hover { border-color: var(--accent-green); box-shadow: var(--glow-green); }
+  .node.purple:hover { border-color: var(--accent-purple); box-shadow: var(--glow-purple); }
+  
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 0.75rem;
+  }
+  .node-icon { font-size: 1.5rem; }
+  .node-title { font-weight: 600; font-size: 1.1rem; }
+  .node-badge {
+    position: absolute;
+    top: -10px; right: 15px;
+    background: var(--bg-main);
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  .node-list { list-style: none; }
+  .node-list li {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .node-list li::before {
+    content: '→';
+    color: var(--accent-blue);
+    font-family: monospace;
+  }
+
+  /* Central Pipeline Flow */
+  .pipeline-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+    padding: 2rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 24px;
+    border: 1px dashed var(--border-color);
+  }
+  
+  .flow-step {
+    width: 100%;
+    max-width: 500px;
+    background: linear-gradient(90deg, rgba(31,41,55,0.8), rgba(17,24,39,0.8));
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.5rem 0;
+    position: relative;
+  }
+  .flow-step.critical {
+    border: 1px solid var(--accent-red);
+    background: linear-gradient(90deg, rgba(239,68,68,0.1), rgba(17,24,39,0.8));
+  }
+  .flow-step-left { display: flex; align-items: center; gap: 1rem; }
+  .flow-step-icon { font-size: 1.2rem; }
+  .flow-step-info h4 { font-size: 1rem; color: var(--text-primary); }
+  .flow-step-info p { font-size: 0.8rem; color: var(--text-secondary); }
+  
+  .down-arrow {
+    height: 30px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent-blue), transparent);
+    margin: 0 auto;
+  }
+
+  /* Feature Grid (Services & Logic) */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  
+  .feature-card {
+    background: rgba(255,255,255,0.02);
+    border-left: 3px solid var(--accent-blue);
+    padding: 1.5rem;
+    border-radius: 0 12px 12px 0;
+  }
+  .feature-card h3 { margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .feature-card p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; }
+  
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .tag {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+  }
+
+  /* --- STATE MACHINE & SCHEDULING --- */
+  .state-machine-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 2rem 0;
+  }
+  
+  .state-node {
+    flex: 1;
+    min-width: 180px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    position: relative;
+  }
+  .state-node.active { border-color: var(--accent-blue); box-shadow: var(--glow-blue); }
+  .state-node.success { border-color: var(--accent-green); box-shadow: var(--glow-green); }
+  .state-node.cancelled { border-color: var(--accent-red); opacity: 0.7; }
+  
+  .state-label { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .state-roles { font-size: 0.75rem; color: var(--accent-orange); font-family: 'JetBrains Mono', monospace; }
+  
+  .state-arrow {
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .state-arrow span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem; }
+
+  /* Schedule Generator Logic */
+  .logic-block {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    overflow-x: auto;
+  }
+  .logic-highlight { color: var(--accent-cyan); }
+  .logic-comment { color: #64748b; }
+
+  /* --- ERD / DATA MODELS --- */
+  .erd-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    position: relative;
+  }
+  
+  .erd-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .erd-header {
+    background: rgba(255,255,255,0.05);
+    padding: 1rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .erd-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .erd-row:last-child { border-bottom: none; }
+  .erd-col-name { color: var(--accent-blue); }
+  .erd-col-type { color: var(--accent-purple); }
+  .erd-key { color: var(--accent-orange); font-size: 0.7rem; border: 1px solid var(--accent-orange); padding: 2px 6px; border-radius: 4px; }
+
+  .tenant-boundary {
+    border: 2px dashed var(--accent-red);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 2rem;
+    position: relative;
+    background: rgba(239, 68, 68, 0.02);
+  }
+  .tenant-label {
+    position: absolute;
+    top: -14px;
+    left: 2rem;
+    background: var(--accent-red);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <header class="hero">
+    <h1 class="hero-title"><span class="gradient-text">MedLayer</span> Architecture Map</h1>
+    <p class="hero-subtitle">Comprehensive visualization of the Multi-Tenant Enterprise Clinic Management Platform. Data flow, strict RBAC security, state machines, and the monolithic multi-tenant schema.</p>
+  </header>
+
+  <div class="container">
+    
+    <!-- SECTION 1: GLOBAL REQUEST PIPELINE -->
+    <section class="glass-panel" style="margin-bottom: 3rem;">
+      <div class="section-header">
+        <div class="section-icon">🛣️</div>
+        <div>
+          <h2>Global Request Pipeline</h2>
+          <p class="section-desc text-secondary">The journey of a request from the React Client to the physical MongoDB Document.</p>
+        </div>
+      </div>
+
+      <div class="arch-grid">
+        <!-- Left: Client Edge -->
+        <div class="arch-column">
+          <div class="arch-column-title">Client Edge (Frontend)</div>
+          
+          <div class="node">
+            <div class="node-badge" style="border-color:var(--accent-cyan); color:var(--accent-cyan)">VITE SPA</div>
+            <div class="node-header">
+              <span class="node-icon">⚛️</span>
+              <span class="node-title">React UI Layer</span>
+            </div>
+            <ul class="node-list">
+              <li>React Router (Protected Routes)</li>
+              <li>AuthContext (Session State)</li>
+              <li>Theme/Toast Contexts</li>
+            </ul>
+          </div>
+
+          <div class="down-arrow" style="height: 20px;"></div>
+
+          <div class="node">
+            <div class="node-header">
+              <span class="node-icon">📡</span>
+              <span class="node-title">Axios Interceptor</span>
+            </div>
+            <ul class="node-list">
+              <li>Injects <span class="mono-text">Bearer JWT</span></li>
+              <li>Catches 401 Unauthorized</li>
+              <li>Auto Token Rotation (<span class="mono-text">/refresh</span>)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Center: Express Server Pipeline -->
+        <div class="pipeline-flow">
+          <div class="arch-column-title" style="border-bottom:none; margin-bottom: 0;">Express Node.js Server</div>
+          <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem;">Strict Middleware Chain</p>
+
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <span class="flow-step-icon">🛡️</span>
+              <div class="flow-step-info">
+                <h4>Edge Security</h4>
+                <p>CORS, Rate Limiter (1k/15m), XSS Sanitize</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="down-arrow"></div>
+
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <span class="flow-step-icon">🔑</span>
+              <div class="flow-step-info">
+                <h4>AuthMiddleware</h4>
+                <p>Validates JWT, Extracts payload (userId, clinicId, role, doctorId)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="down-arrow"></div>
+
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <span class="flow-step-icon">🚦</span>
+              <div class="flow-step-info">
+                <h4>RBAC: permit(ACTION)</h4>
+                <p>Checks role against <span class="mono-text">permissions.js</span> matrix (e.g. VIEW_PATIENT)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="down-arrow"></div>
+
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <span class="flow-step-icon">✅</span>
+              <div class="flow-step-info">
+                <h4>Joi Validation</h4>
+                <p>Validates req.body against strict schemas</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="down-arrow"></div>
+
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <span class="flow-step-icon">⚙️</span>
+              <div class="flow-step-info">
+                <h4>Controller Layer (wrapAsync)</h4>
+                <p>Parses HTTP, calls Service Layer</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Service & Data Layer -->
+        <div class="arch-column">
+          <div class="arch-column-title">Service & Data Layer</div>
+          
+          <div class="node green">
+            <div class="node-badge" style="border-color:var(--accent-green); color:var(--accent-green)">BUSINESS LOGIC</div>
+            <div class="node-header">
+              <span class="node-icon">💼</span>
+              <span class="node-title">Domain Services</span>
+            </div>
+            <ul class="node-list">
+              <li>Appointment slot generation</li>
+              <li>Doctor shift/break validation</li>
+              <li>Audit logging (<span class="mono-text">logAction</span>)</li>
+            </ul>
+          </div>
+
+          <div class="down-arrow" style="height: 20px;"></div>
+
+          <div class="node" style="border-color: var(--accent-red); box-shadow: 0 0 15px rgba(239,68,68,0.2);">
+            <div class="node-badge" style="border-color:var(--accent-red); color:var(--accent-red)">CRITICAL</div>
+            <div class="node-header">
+              <span class="node-icon">🔒</span>
+              <span class="node-title">baseTenantService</span>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">
+              Intercepts ALL queries. Forcibly injects <span class="mono-text">{ clinicId: user.clinicId }</span> to ensure absolute tenant isolation at the ODM level.
+            </p>
+          </div>
+
+          <div class="down-arrow" style="height: 20px;"></div>
+
+          <div class="node purple">
+            <div class="node-header">
+              <span class="node-icon">🍃</span>
+              <span class="node-title">MongoDB (Mongoose)</span>
+            </div>
+            <ul class="node-list">
+              <li>Compound Indexes (Performance)</li>
+              <li>Unique Constraints (No double booking)</li>
+              <li>Soft Deletes (<span class="mono-text">isDeleted: false</span>)</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: CORE FEATURES & BUSINESS LOGIC -->
+    <section class="glass-panel" style="margin-bottom: 3rem;">
+      <div class="section-header">
+        <div class="section-icon">🧠</div>
+        <div>
+          <h2>Core System Services</h2>
+          <p class="section-desc text-secondary">The primary engines driving the clinic operations.</p>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card" style="border-color: var(--accent-blue);">
+          <h3>🔐 Authentication & AuthZ</h3>
+          <p>Login generates short-lived Access Token (3h) and long-lived Refresh Token (7d). APIs protected by highly decoupled RBAC Matrix.</p>
+          <div class="tag-cloud">
+            <span class="tag">JWT</span>
+            <span class="tag">Bcrypt</span>
+            <span class="tag">Token Rotation</span>
+            <span class="tag">Role Matrix</span>
+          </div>
+        </div>
+
+        <div class="feature-card" style="border-color: var(--accent-green);">
+          <h3>📅 Schedule Generation</h3>
+          <p>Dynamically calculates available slots by cross-referencing Clinic Hours, Doctor Shifts, Doctor Breaks, Holidays, and existing Bookings.</p>
+          <div class="tag-cloud">
+            <span class="tag">30-min Intervals</span>
+            <span class="tag">Shift Arrays</span>
+            <span class="tag">Collision Detection</span>
+          </div>
+        </div>
+
+        <div class="feature-card" style="border-color: var(--accent-orange);">
+          <h3>🕵️ Audit Logging</h3>
+          <p>Every critical action (Create/Reschedule/Cancel) is permanently recorded in the AuditLog collection with User ID, Role, and timestamp.</p>
+          <div class="tag-cloud">
+            <span class="tag">Traceability</span>
+            <span class="tag">Compliance</span>
+            <span class="tag">logAction()</span>
+          </div>
+        </div>
+
+        <div class="feature-card" style="border-color: var(--accent-purple);">
+          <h3>🧑‍⚕️ Doctor Data Isolation</h3>
+          <p>When a Doctor queries patients, logic checks the Appointments collection to return ONLY patients who have historically booked with them.</p>
+          <div class="tag-cloud">
+            <span class="tag">Privacy</span>
+            <span class="tag">Dynamic Filtering</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: STATE MACHINE -->
+    <section class="glass-panel" style="margin-bottom: 3rem;">
+      <div class="section-header">
+        <div class="section-icon">🔄</div>
+        <div>
+          <h2>Appointment State Machine</h2>
+          <p class="section-desc text-secondary">Strict, unidirectional workflow enforced by both Backend APIs and React UI logic.</p>
+        </div>
+      </div>
+
+      <div class="state-machine-container">
+        
+        <div class="state-node active">
+          <div class="state-label text-blue">BOOKED</div>
+          <div class="state-roles">Admin, Recep</div>
+          <p style="font-size:0.8rem; margin-top:0.5rem; color:var(--text-secondary);">Initial State. Doctor UI hides action buttons.</p>
+        </div>
+
+        <div class="state-arrow">
+          ➔
+          <span>check-in</span>
+        </div>
+
+        <div class="state-node" style="border-color: var(--accent-orange);">
+          <div class="state-label" style="color: var(--accent-orange);">CHECKED_IN</div>
+          <div class="state-roles">Admin, Recep</div>
+          <p style="font-size:0.8rem; margin-top:0.5rem; color:var(--text-secondary);">Patient arrived. Control hands over to medical staff.</p>
+        </div>
+
+        <div class="state-arrow">
+          ➔
+          <span>complete</span>
+        </div>
+
+        <div class="state-node success">
+          <div class="state-label" style="color: var(--accent-green);">COMPLETED</div>
+          <div class="state-roles">Admin, Recep, Doctor</div>
+          <p style="font-size:0.8rem; margin-top:0.5rem; color:var(--text-secondary);">Terminal State. Notes can now be added.</p>
+        </div>
+
+      </div>
+
+      <div style="display:flex; justify-content: center; gap: 2rem; margin-top: 1rem;">
+        <div class="state-node cancelled" style="min-width: 150px; padding: 1rem;">
+          <div class="state-label" style="color: var(--accent-red);">CANCELLED</div>
+          <p style="font-size:0.75rem;">Can only occur from BOOKED</p>
+        </div>
+        <div class="state-node cancelled" style="min-width: 150px; padding: 1rem;">
+          <div class="state-label" style="color: var(--text-secondary);">NO_SHOW</div>
+          <p style="font-size:0.75rem;">Auto-assigned by chron/fetch if passed</p>
+        </div>
+      </div>
+
+      <!-- Schedule Code Snippet -->
+      <div style="margin-top: 2rem;">
+        <h4 style="margin-bottom: 0.5rem;">Core Slot Generation Logic (Conceptual)</h4>
+        <div class="logic-block">
+          <span class="logic-comment">// 1. Generate base slots from Doctor's Availability Shifts</span><br>
+          let available = generateSlots(shift.start, shift.end);<br><br>
+          <span class="logic-comment">// 2. Filter out slots outside Clinic Working Hours</span><br>
+          available = available.filter(slot => slot >= clinic.start && slot < clinic.end);<br><br>
+          <span class="logic-comment">// 3. Remove slots colliding with Doctor Breaks & Holidays</span><br>
+          available = available.filter(slot => !breakSlots.includes(slot));<br><br>
+          <span class="logic-comment">// 4. Remove already BOOKED/CHECKED_IN/COMPLETED appointments</span><br>
+          available = available.filter(slot => !bookedAppointments.includes(slot));<br><br>
+          <span class="logic-highlight">return available;</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: DATA MODELS & ERD -->
+    <section class="glass-panel">
+      <div class="section-header">
+        <div class="section-icon">🗄️</div>
+        <div>
+          <h2>Database Schema & ERD</h2>
+          <p class="section-desc text-secondary">Monolithic Multi-Tenant architecture. All collections are heavily indexed.</p>
+        </div>
+      </div>
+
+      <div class="tenant-boundary">
+        <div class="tenant-label">TENANT BOUNDARY (clinicId)</div>
+        
+        <div class="erd-container">
+          
+          <!-- Clinic -->
+          <div class="erd-table" style="border-color: var(--accent-red);">
+            <div class="erd-header">🏥 Clinic (Root)</div>
+            <div class="erd-row"><span class="erd-col-name">_id</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">PK</span></div>
+            <div class="erd-row"><span class="erd-col-name">name</span> <span class="erd-col-type">String</span></div>
+            <div class="erd-row"><span class="erd-col-name">workingHours</span> <span class="erd-col-type">Object</span></div>
+            <div class="erd-row"><span class="erd-col-name">settings.days</span> <span class="erd-col-type">Array</span></div>
+          </div>
+
+          <!-- User -->
+          <div class="erd-table">
+            <div class="erd-header">👤 User</div>
+            <div class="erd-row"><span class="erd-col-name">_id</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">PK</span></div>
+            <div class="erd-row"><span class="erd-col-name">clinicId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+            <div class="erd-row"><span class="erd-col-name">email</span> <span class="erd-col-type">String</span></div>
+            <div class="erd-row"><span class="erd-col-name">role</span> <span class="erd-col-type">Enum</span></div>
+            <div class="erd-row"><span class="erd-col-name">doctorId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+          </div>
+
+          <!-- Doctor -->
+          <div class="erd-table">
+            <div class="erd-header">🩺 Doctor</div>
+            <div class="erd-row"><span class="erd-col-name">_id</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">PK</span></div>
+            <div class="erd-row"><span class="erd-col-name">clinicId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+            <div class="erd-row"><span class="erd-col-name">availability</span> <span class="erd-col-type">Array</span></div>
+          </div>
+
+          <!-- Patient -->
+          <div class="erd-table">
+            <div class="erd-header">🧑‍🦽 Patient</div>
+            <div class="erd-row"><span class="erd-col-name">_id</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">PK</span></div>
+            <div class="erd-row"><span class="erd-col-name">clinicId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+            <div class="erd-row"><span class="erd-col-name">name</span> <span class="erd-col-type">String</span></div>
+          </div>
+
+          <!-- Appointment -->
+          <div class="erd-table" style="grid-column: 1 / -1; max-width: 600px; margin: 0 auto; border-color: var(--accent-blue);">
+            <div class="erd-header">📅 Appointment (The Core Link)</div>
+            <div style="display:flex;">
+              <div style="flex:1;">
+                <div class="erd-row"><span class="erd-col-name">_id</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">PK</span></div>
+                <div class="erd-row"><span class="erd-col-name">clinicId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+                <div class="erd-row"><span class="erd-col-name">doctorId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+                <div class="erd-row"><span class="erd-col-name">patientId</span> <span class="erd-col-type">ObjectId</span> <span class="erd-key">FK</span></div>
+              </div>
+              <div style="flex:1; border-left: 1px solid var(--border-color);">
+                <div class="erd-row"><span class="erd-col-name">date</span> <span class="erd-col-type">Date</span></div>
+                <div class="erd-row"><span class="erd-col-name">time</span> <span class="erd-col-type">String</span></div>
+                <div class="erd-row"><span class="erd-col-name">status</span> <span class="erd-col-type">Enum</span></div>
+                <div class="erd-row"><span class="erd-col-name">notes</span> <span class="erd-col-type">String</span></div>
+              </div>
+            </div>
+            <div style="padding: 0.75rem; background: rgba(59,130,246,0.1); font-size: 0.8rem; text-align: center;">
+              <strong>Compound Index:</strong> { doctorId: 1, date: 1, time: 1, clinicId: 1 } (Unique if active)
+            </div>
+          </div>
+
+          <!-- Audit & Breaks (Auxiliary) -->
+          <div class="erd-table" style="opacity: 0.8;">
+            <div class="erd-header">📋 Auxiliary Models</div>
+            <div class="erd-row"><span class="erd-col-name">AuditLog</span> <span class="erd-col-type">(Tracks user actions)</span></div>
+            <div class="erd-row"><span class="erd-col-name">DoctorBreak</span> <span class="erd-col-type">(Intra-day blocks)</span></div>
+            <div class="erd-row"><span class="erd-col-name">DoctorHoliday</span> <span class="erd-col-type">(Full day blocks)</span></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 3rem 0; color: var(--text-secondary); font-size: 0.9rem;">
+      <p>MedLayer Enterprise Architecture Map</p>
+      <p style="margin-top: 0.5rem; opacity: 0.6;">Architected for multi-tenant scalability, security, and strict data integrity.</p>
+    </footer>
+
+  </div>
+
+</body>
+</html>

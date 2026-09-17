@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedLayer – Architecture & System Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060b14;
+    --surface: #0d1521;
+    --surface2: #111d2e;
+    --border: rgba(99,179,237,0.15);
+    --accent: #3b82f6;
+    --accent2: #06b6d4;
+    --green: #10b981;
+    --purple: #8b5cf6;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --glow: 0 0 20px rgba(59,130,246,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow-x:hidden; }
+
+  /* Hero */
+  .hero {
+    text-align:center; padding:60px 20px 40px;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,130,246,0.12), transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:20px; padding:6px 16px; font-size:12px; color:var(--accent2); margin-bottom:20px; letter-spacing:1px; text-transform:uppercase; }
+  .hero h1 { font-size:clamp(2rem,5vw,3.5rem); font-weight:800; background:linear-gradient(135deg,#e2e8f0,#63b3ed,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1.1; }
+  .hero p { margin-top:14px; color:var(--muted); font-size:1.05rem; max-width:600px; margin-inline:auto; }
+
+  /* Layout */
+  .container { max-width:1100px; margin:0 auto; padding:0 24px; }
+  .section { padding:50px 0; }
+  .section-title { font-size:1.4rem; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+  .section-title span { font-size:1.5rem; }
+  .section-desc { color:var(--muted); font-size:0.95rem; margin-bottom:32px; line-height:1.7; }
+
+  /* Architecture Flow Diagram */
+  .arch-flow {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px; margin-bottom:32px;
+    position:relative; overflow:hidden;
+  }
+  .arch-flow::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at top left, rgba(59,130,246,0.05), transparent 60%); pointer-events:none; }
+  .arch-flow-label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:24px; }
+
+  .flow-row { display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap; margin-bottom:0; }
+  .flow-node {
+    background:var(--surface2); border-radius:12px; padding:14px 20px; text-align:center; min-width:120px;
+    border:1px solid var(--border); position:relative; transition:transform 0.2s, box-shadow 0.2s;
+    cursor:default;
+  }
+  .flow-node:hover { transform:translateY(-3px); box-shadow:var(--glow); }
+  .flow-node .icon { font-size:1.6rem; display:block; margin-bottom:6px; }
+  .flow-node .label { font-size:12px; font-weight:600; color:var(--text); }
+  .flow-node .sublabel { font-size:10px; color:var(--muted); margin-top:2px; }
+  .flow-node.accent { border-color:rgba(59,130,246,0.5); background:rgba(59,130,246,0.08); }
+  .flow-node.green { border-color:rgba(16,185,129,0.5); background:rgba(16,185,129,0.08); }
+  .flow-node.purple { border-color:rgba(139,92,246,0.5); background:rgba(139,92,246,0.08); }
+  .flow-node.orange { border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.08); }
+  .flow-node.red-node { border-color:rgba(239,68,68,0.5); background:rgba(239,68,68,0.08); }
+
+  .arrow { font-size:1.4rem; color:var(--muted); padding:0 6px; flex-shrink:0; }
+  .arrow.down { display:flex; justify-content:center; font-size:1.2rem; color:var(--muted); margin:10px 0; }
+  .arrow.accent-arrow { color:var(--accent); }
+
+  /* Interceptor visual */
+  .interceptor-box {
+    border:2px dashed rgba(239,68,68,0.4); border-radius:16px; padding:24px 28px;
+    background:rgba(239,68,68,0.03); margin:28px 0; position:relative;
+  }
+  .interceptor-box .badge {
+    position:absolute; top:-12px; left:20px;
+    background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); border-radius:8px;
+    padding:3px 12px; font-size:11px; font-weight:600; color:#fca5a5; letter-spacing:0.5px;
+  }
+  .interceptor-inner { display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .code-pill {
+    background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px;
+    padding:8px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; color:#93c5fd;
+  }
+
+  /* Data Models */
+  .models-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:16px; }
+  .model-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;
+    transition:transform 0.2s, border-color 0.2s; cursor:default;
+  }
+  .model-card:hover { transform:translateY(-4px); }
+  .model-card.root { border-color:rgba(245,158,11,0.5); }
+  .model-card.root:hover { border-color:rgba(245,158,11,0.9); box-shadow:0 0 20px rgba(245,158,11,0.2); }
+  .model-card.blue:hover { border-color:rgba(59,130,246,0.9); box-shadow:0 0 20px rgba(59,130,246,0.2); }
+  .model-card.green:hover { border-color:rgba(16,185,129,0.9); box-shadow:0 0 20px rgba(16,185,129,0.2); }
+  .model-card.purple:hover { border-color:rgba(139,92,246,0.9); box-shadow:0 0 20px rgba(139,92,246,0.2); }
+  .model-card.cyan:hover { border-color:rgba(6,182,212,0.9); box-shadow:0 0 20px rgba(6,182,212,0.2); }
+  .model-icon { font-size:2rem; margin-bottom:10px; }
+  .model-name { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .model-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+  .model-tag { display:inline-block; margin-top:8px; font-size:10px; border-radius:4px; padding:2px 8px; font-weight:600; }
+  .tag-root { background:rgba(245,158,11,0.15); color:#fbbf24; }
+  .tag-blue { background:rgba(59,130,246,0.15); color:#93c5fd; }
+  .tag-green { background:rgba(16,185,129,0.15); color:#6ee7b7; }
+  .tag-purple { background:rgba(139,92,246,0.15); color:#c4b5fd; }
+  .tag-cyan { background:rgba(6,182,212,0.15); color:#67e8f9; }
+
+  /* ER Relationships */
+  .er-grid { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:center; padding:24px; background:var(--surface); border:1px solid var(--border); border-radius:16px; }
+  .er-entity { text-align:center; }
+  .er-box { background:var(--surface2); border-radius:10px; padding:10px 18px; border:1px solid var(--border); font-size:13px; font-weight:600; }
+  .er-rel { font-size:11px; color:var(--muted); padding:0 10px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .er-rel .line { width:40px; height:1px; background:linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .er-rel .type { color:var(--accent2); font-weight:600; }
+
+  /* Divider */
+  .divider { border:none; border-top:1px solid var(--border); margin:10px 0 40px; }
+
+  /* Highlight box */
+  .highlight {
+    background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.25); border-radius:12px;
+    padding:18px 22px; margin-top:24px; font-size:13px; color:#a7f3d0; line-height:1.7;
+  }
+  .highlight strong { color:#6ee7b7; }
+
+  /* Animated gradient border */
+  @keyframes borderGlow { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .glow-border { animation: borderGlow 3s ease-in-out infinite; }
+
+  /* Responsive */
+  @media(max-width:600px) {
+    .flow-row { gap:6px; }
+    .arrow { font-size:1rem; }
+    .models-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">🏥 MedLayer Platform</div>
+  <h1>Architecture &amp; System Design</h1>
+  <p>Monolithic Multi-Tenant SaaS — Partitioned by tenant footprint, secured at the ODM layer.</p>
+</div>
+
+<div class="container">
+
+  <!-- Section 1: High-Level Flow -->
+  <div class="section">
+    <div class="section-title"><span>🗺️</span> High-Level Request Flow</div>
+    <div class="section-desc">Every client request travels through a strict interceptor chain before touching business logic or the database.</div>
+
+    <div class="arch-flow">
+      <div class="arch-flow-label">Request Lifecycle</div>
+
+      <!-- Row 1: Client -->
+      <div class="flow-row">
+        <div class="flow-node accent">
+          <span class="icon">🌐</span>
+          <div class="label">React SPA</div>
+          <div class="sublabel">Vite · localhost:5173</div>
+        </div>
+      </div>
+
+      <div class="arrow down">⬇️</div>
+
+      <!-- Row 2: Middleware Chain -->
+      <div class="flow-row">
+        <div class="flow-node orange">
+          <span class="icon">🔑</span>
+          <div class="label">authMiddleware</div>
+          <div class="sublabel">JWT Verification</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-node purple">
+          <span class="icon">🛡️</span>
+          <div class="label">permit(ACTION)</div>
+          <div class="sublabel">RBAC Gate</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-node accent">
+          <span class="icon">⚙️</span>
+          <div class="label">wrapAsync</div>
+          <div class="sublabel">Controller</div>
+        </div>
+      </div>
+
+      <div class="arrow down">⬇️</div>
+
+      <!-- Interceptor -->
+      <div class="interceptor-box glow-border">
+        <div class="badge">🔒 baseTenantService Interceptor</div>
+        <div class="interceptor-inner">
+          <div class="code-pill">req.user.clinicId</div>
+          <div style="color:var(--muted);font-size:13px;">auto-bound to every query</div>
+          <div class="code-pill">{ clinicId: clinicId }</div>
+        </div>
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:#fca5a5;">
+          ⚠️ Cross-tenant queries are physically blocked at the ODM execution layer — even if a controller is misconfigured.
+        </div>
+      </div>
+
+      <div class="arrow down">⬇️</div>
+
+      <!-- Row 3: DB -->
+      <div class="flow-row">
+        <div class="flow-node green">
+          <span class="icon">🍃</span>
+          <div class="label">MongoDB</div>
+          <div class="sublabel">Mongoose ODM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <strong>Key Guarantee:</strong> The <code style="background:rgba(0,0,0,0.3);padding:1px 6px;border-radius:4px;">baseTenantService</code> intercepts every read/write/update and automatically binds <code style="background:rgba(0,0,0,0.3);padding:1px 6px;border-radius:4px;">{ clinicId }</code> at the Mongoose layer — not at the HTTP controller layer — making data leakage structurally impossible.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 2: Core Data Models -->
+  <div class="section">
+    <div class="section-title"><span>🗂️</span> Core Data Models &amp; Relationships</div>
+    <div class="section-desc">Five Mongoose schemas form the operational backbone. <strong style="color:#fbbf24;">Clinic</strong> is the root tenant — every other entity is bound to it.</div>
+
+    <div class="models-grid">
+      <div class="model-card root">
+        <div class="model-icon">🏥</div>
+        <div class="model-name">Clinic</div>
+        <div class="model-desc">Root tenant entity. All data is partitioned by this ID. Created at registration.</div>
+        <span class="model-tag tag-root">ROOT TENANT</span>
+      </div>
+      <div class="model-card blue">
+        <div class="model-icon">👤</div>
+        <div class="model-name">User</div>
+        <div class="model-desc">Admin, Receptionist, or Doctor staff. Requires JWT authentication to operate.</div>
+        <span class="model-tag tag-blue">AUTHENTICATED</span>
+      </div>
+      <div class="model-card green">
+        <div class="model-icon">🩺</div>
+        <div class="model-name">Doctor</div>
+        <div class="model-desc">Medical personnel profile. Linked to a User but maintains independent scheduling arrays.</div>
+        <span class="model-tag tag-green">LINKED TO USER</span>
+      </div>
+      <div class="model-card purple">
+        <div class="model-icon">🧑‍🦽</div>
+        <div class="model-name">Patient</div>
+        <div class="model-desc">Global CRM profile. Accessible only within the owning clinic tenant boundary.</div>
+        <span class="model-tag tag-purple">TENANT-SCOPED</span>
+      </div>
+      <div class="model-card cyan">
+        <div class="model-icon">📅</div>
+        <div class="model-name">Appointment</div>
+        <div class="model-desc">The State Machine. Binds a Doctor + Patient + DateTime. Drives the entire operational flow.</div>
+        <span class="model-tag tag-cyan">STATE MACHINE</span>
+      </div>
+    </div>
+
+    <!-- ER Relationships -->
+    <div style="margin-top:24px;">
+      <div class="arch-flow-label" style="text-align:center;margin-bottom:16px;">Entity Relationships</div>
+      <div class="er-grid">
+        <div class="er-entity"><div class="er-box" style="border-color:rgba(245,158,11,0.5);color:#fbbf24;">🏥 Clinic</div></div>
+        <div class="er-rel"><div class="line"></div><div class="type">1 : N</div><div class="line"></div></div>
+        <div class="er-entity"><div class="er-box" style="border-color:rgba(59,130,246,0.5);color:#93c5fd;">👤 User</div></div>
+        <div class="er-rel"><div class="line"></div><div class="type">1 : 1</div><div class="line"></div></div>
+        <div class="er-entity"><div class="er-box" style="border-color:rgba(16,185,129,0.5);color:#6ee7b7;">🩺 Doctor</div></div>
+        <div class="er-rel"><div class="line"></div><div class="type">1 : N</div><div class="line"></div></div>
+        <div class="er-entity"><div class="er-box" style="border-color:rgba(6,182,212,0.5);color:#67e8f9;">📅 Appointment</div></div>
+        <div class="er-rel"><div class="line"></div><div class="type">N : 1</div><div class="line"></div></div>
+        <div class="er-entity"><div class="er-box" style="border-color:rgba(139,92,246,0.5);color:#c4b5fd;">🧑‍🦽 Patient</div></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 3: Appointment State Machine -->
+  <div class="section">
+    <div class="section-title"><span>⚡</span> Appointment State Machine</div>
+    <div class="section-desc">Appointments follow a strict, unidirectional state lifecycle. Each role can only trigger state transitions it's authorized for.</div>
+
+    <div class="arch-flow">
+      <div class="flow-row" style="gap:0; flex-wrap:nowrap; overflow-x:auto; padding-bottom:8px;">
+
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="flow-node" style="border-color:rgba(59,130,246,0.5); background:rgba(59,130,246,0.08); min-width:130px;">
+            <span class="icon">📋</span>
+            <div class="label">BOOKED</div>
+            <div class="sublabel">Initial State</div>
+          </div>
+          <div style="margin-top:8px;font-size:10px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:6px;padding:3px 8px;color:#93c5fd;">Admin / Receptionist</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8px;">
+          <div style="font-size:1.2rem;color:var(--accent);">→</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">check-in</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="flow-node" style="border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.08); min-width:130px;">
+            <span class="icon">✅</span>
+            <div class="label">CHECKED_IN</div>
+            <div class="sublabel">Patient Arrived</div>
+          </div>
+          <div style="margin-top:8px;font-size:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:3px 8px;color:#fbbf24;">Admin / Receptionist</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8px;">
+          <div style="font-size:1.2rem;color:var(--accent2);">→</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">complete</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="flow-node" style="border-color:rgba(16,185,129,0.5); background:rgba(16,185,129,0.08); min-width:130px;">
+            <span class="icon">🏁</span>
+            <div class="label">COMPLETED</div>
+            <div class="sublabel">Terminal State</div>
+          </div>
+          <div style="margin-top:8px;font-size:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:3px 8px;color:#6ee7b7;">Admin / Recep / Doctor</div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:24px; padding:14px 18px; background:rgba(0,0,0,0.3); border-radius:10px; font-size:12px; color:var(--muted); border-left:3px solid var(--accent);">
+        <strong style="color:var(--text);">UI Guardrail:</strong> A <code style="color:#93c5fd;">BOOKED</code> appointment hides Doctor controls entirely, rendering only <em>"Awaiting Arrival"</em>. The <em>"Complete"</em> button only appears after the Receptionist advances the state to <code style="color:#fbbf24;">CHECKED_IN</code>.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 4: Multi-Tenant Boundary -->
+  <div class="section">
+    <div class="section-title"><span>🏗️</span> Multi-Tenant Boundary Enforcement</div>
+    <div class="section-desc">Each hospital franchise is a separate tenant. The shared database is logically partitioned — tenants are invisible to each other.</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div style="background:var(--surface); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:24px;">
+        <div style="font-size:1.4rem; margin-bottom:10px;">🏥</div>
+        <div style="font-size:13px; font-weight:700; color:#93c5fd; margin-bottom:8px;">Clinic A — Apollo</div>
+        <div style="font-size:11px; color:var(--muted); line-height:1.8;">
+          clinicId: <span style="color:#93c5fd; font-family:'JetBrains Mono',monospace;">abc123</span><br>
+          Users: 12 · Doctors: 8<br>
+          Patients: 340 · Appointments: 1,200
+        </div>
+      </div>
+      <div style="background:var(--surface); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:24px;">
+        <div style="font-size:1.4rem; margin-bottom:10px;">🏥</div>
+        <div style="font-size:13px; font-weight:700; color:#c4b5fd; margin-bottom:8px;">Clinic B — MediCare</div>
+        <div style="font-size:11px; color:var(--muted); line-height:1.8;">
+          clinicId: <span style="color:#c4b5fd; font-family:'JetBrains Mono',monospace;">xyz789</span><br>
+          Users: 7 · Doctors: 4<br>
+          Patients: 180 · Appointments: 620
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin:20px 0; font-size:12px; color:var(--muted);">
+      ↑ Physically isolated by <code style="color:#fca5a5; background:rgba(239,68,68,0.1); padding:1px 6px; border-radius:4px;">baseTenantService</code> — shared MongoDB, zero data bleed ↑
+    </div>
+
+    <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:18px 22px;">
+      <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Shared MongoDB Database</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:140px; background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:10px 14px; font-size:12px;">
+          <div style="color:#93c5fd; font-weight:600; margin-bottom:4px;">patients collection</div>
+          <div style="color:var(--muted);">All tenants, partitioned by clinicId</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:10px 14px; font-size:12px;">
+          <div style="color:#6ee7b7; font-weight:600; margin-bottom:4px;">appointments collection</div>
+          <div style="color:var(--muted);">All tenants, partitioned by clinicId</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:rgba(139,92,246,0.05); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:10px 14px; font-size:12px;">
+          <div style="color:#c4b5fd; font-weight:600; margin-bottom:4px;">doctors collection</div>
+          <div style="color:var(--muted);">All tenants, partitioned by clinicId</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center; padding:40px 0 60px; color:var(--muted); font-size:13px; border-top:1px solid var(--border);">
+    <div style="margin-bottom:8px; font-size:1.5rem;">🏥</div>
+    <em>MedLayer · Architected with focus. Built for scale.</em>
+  </div>
+
+</div>
+
+<script>
+  // Subtle entrance animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.model-card, .arch-flow, .interceptor-box').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
