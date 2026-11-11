@@ -13,11 +13,11 @@ const Sidebar = () => {
 
   const navItems = [
     { name: 'Appointments', path: '/dashboard', icon: <CalendarDays size={20} />, roles: ['admin', 'receptionist', 'doctor'] },
-    { name: 'Dr. Schedule', path: '/dashboard/schedule', icon: <Clock size={20} />, roles: ['admin', 'receptionist', 'doctor'] },
+    { name: 'Doctor Schedule', path: '/dashboard/schedule', icon: <Clock size={20} />, roles: ['admin', 'receptionist', 'doctor'] },
     { name: 'Patients', path: '/dashboard/patients', icon: <Users size={20} />, roles: ['admin', 'receptionist', 'doctor'] },
     { name: 'Doctors', path: '/dashboard/doctors', icon: <UserRoundCog size={20} />, roles: ['admin', 'receptionist'] },
-    { name: 'Audit Logs', path: '/dashboard/audit-logs', icon: <Database size={20} />, roles: ['admin'] },
-    { name: 'Staff Management', path: '/dashboard/staff', icon: <ShieldCheck size={20} />, roles: ['admin'] },
+    { name: 'Activity Log', path: '/dashboard/audit-logs', icon: <Database size={20} />, roles: ['admin'] },
+    { name: 'Staff Accounts', path: '/dashboard/staff', icon: <ShieldCheck size={20} />, roles: ['admin'] },
     { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} />, roles: ['admin'] },
   ];
 

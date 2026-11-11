@@ -43,9 +43,9 @@ const Login = () => {
           <Activity size={40} className="text-accent-primary" style={{ color: 'var(--accent-primary)', marginBottom: '1rem' }} />
           <h2>Welcome Back</h2>
           <p className="text-muted" style={{ marginTop: '0.5rem' }}>
-            {loginRole === 'admin' ? 'Login to your Clinic Admin Dashboard' :
-              loginRole === 'receptionist' ? 'Login to your Front Desk Reception Portal' :
-                'Login to your Doctor Portal'}
+            {loginRole === 'admin' ? 'Sign in to manage your clinic' :
+              loginRole === 'receptionist' ? 'Sign in to manage appointments & front desk' :
+                'Sign in to view your patient visits'}
           </p>
         </div>
 
@@ -157,13 +157,13 @@ const Login = () => {
             </div>
           </div>
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: '0.5rem' }}>
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem' }}>
           <span className="text-muted">Don't have a clinic? </span>
-          <Link to="/register">Register here</Link>
+          <Link to="/register">Create one here</Link>
         </div>
 
         <button
@@ -190,7 +190,7 @@ const Login = () => {
           }}
         >
           <HelpCircle size={16} />
-          Demo Walkthrough & Credentials
+          Quick Start Guide
         </button>
       </div>
 

@@ -51,11 +51,11 @@ const ClinicSettings = () => {
     <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
         <Settings size={28} style={{ color: 'var(--accent-primary)' }} />
-        <h1>Clinic Configuration</h1>
+        <h1>Clinic Settings</h1>
       </div>
 
       <div className="panel">
-        <p className="text-muted" style={{ marginBottom: '2rem' }}>Configure global clinic operating parameters affecting all subordinate doctors.</p>
+        <p className="text-muted" style={{ marginBottom: '2rem' }}>Set your clinic's working hours and open days for all doctors.</p>
 
         {message && (
           <div style={{ background: 'var(--success-bg)', color: 'var(--success)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
@@ -73,7 +73,7 @@ const ClinicSettings = () => {
           
           <div style={{ padding: '1.5rem', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-              <Clock size={20} /> Operational Hours
+              <Clock size={20} /> Working Hours
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.75rem', alignItems: 'end' }}>
               <div>
@@ -122,13 +122,13 @@ const ClinicSettings = () => {
               ))}
             </div>
             {workingDays.length === 0 && (
-              <p style={{ color: 'var(--warning)', marginTop: '1rem', fontSize: '0.875rem' }}>Warning: You must select at least one working day.</p>
+              <p style={{ color: 'var(--warning)', marginTop: '1rem', fontSize: '0.875rem' }}>Please select at least one working day.</p>
             )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
             <button type="submit" className="btn btn-primary" disabled={loading || workingDays.length === 0}>
-              {loading ? 'Saving Parameters...' : 'Save Configuration'}
+              {loading ? 'Saving...' : 'Save Settings'}
             </button>
           </div>
         </form>

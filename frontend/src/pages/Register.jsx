@@ -37,7 +37,7 @@ const Register = () => {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <ShieldCheck size={40} className="text-success" style={{ color: 'var(--success)', marginBottom: '1rem' }} />
           <h2>Setup New Clinic</h2>
-          <p className="text-muted" style={{ marginTop: '0.5rem' }}>Deploy a pristine management environment</p>
+          <p className="text-muted" style={{ marginTop: '0.5rem' }}>Create your clinic account to get started</p>
         </div>
 
         {error && (
@@ -64,7 +64,7 @@ const Register = () => {
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Master Admin Email</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Admin Email</label>
             <input 
               type="email" 
               required
@@ -106,12 +106,12 @@ const Register = () => {
             </div>
           </div>
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: '0.5rem' }}>
-            {loading ? 'Deploying...' : 'Register Target Clinic'}
+            {loading ? 'Setting up...' : 'Create My Clinic'}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem' }}>
-          <span className="text-muted">Already configured? </span>
+          <span className="text-muted">Already have a clinic? </span>
           <Link to="/login">Sign in here</Link>
         </div>
       </div>

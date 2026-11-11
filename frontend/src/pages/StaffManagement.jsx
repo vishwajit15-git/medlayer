@@ -84,14 +84,14 @@ const StaffManagement = () => {
   };
 
   const handleDelete = async (userId, userEmail) => {
-    if (!window.confirm(`Revoke access for "${userEmail}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Remove account for "${userEmail}"? This cannot be undone.`)) return;
     setDeleteLoadingId(userId);
     try {
       await api.delete(`/auth/users/${userId}`);
-      setMessage(`Access revoked for ${userEmail}`);
+      setMessage(`Account removed for ${userEmail}`);
       await fetchStaffData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to revoke access.');
+      setError(err.response?.data?.message || 'Failed to remove account.');
     } finally {
       setDeleteLoadingId(null);
     }
@@ -106,7 +106,7 @@ const StaffManagement = () => {
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '2rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Users size={28} style={{ color: 'var(--accent-primary)' }} />
-        <h1>Staff Management</h1>
+        <h1>Staff Accounts</h1>
       </div>
 
       {/* Register Form */}
@@ -114,9 +114,9 @@ const StaffManagement = () => {
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <UserPlus size={20} style={{ color: 'var(--accent-primary)' }} />
-            Register New {formData.role === 'doctor' ? 'Doctor' : 'Receptionist'} Account
+            Add {formData.role === 'doctor' ? 'Doctor' : 'Receptionist'} Login
           </h2>
-          <p className="text-muted">Create certified access accounts for clinical staff.</p>
+          <p className="text-muted">Create login accounts for your clinic's team members.</p>
         </div>
 
         {message && (
@@ -135,7 +135,7 @@ const StaffManagement = () => {
 
             <div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                <Mail size={16} /> Official Email
+                <Mail size={16} /> Email Address
               </label>
               <input
                 type="email"
@@ -149,7 +149,7 @@ const StaffManagement = () => {
 
             <div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                <Lock size={16} /> Secure Password
+                <Lock size={16} /> Password
               </label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -192,8 +192,8 @@ const StaffManagement = () => {
                   value={formData.role}
                   onChange={(val) => setFormData({ ...formData, role: val, doctorId: '' })}
                   options={[
-                    { value: 'receptionist', label: 'Clinical Receptionist' },
-                    { value: 'doctor', label: 'Medical Doctor' }
+                    { value: 'receptionist', label: 'Receptionist' },
+                    { value: 'doctor', label: 'Doctor' }
                   ]}
                   triggerStyle={{ padding: '0.875rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
                 />
@@ -203,7 +203,7 @@ const StaffManagement = () => {
             {formData.role === 'doctor' && (
               <div style={{ gridColumn: 'span 1' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                  <Users size={16} /> Link Doctor Profile
+                  <Users size={16} /> Link to Doctor
                 </label>
                 <div style={{ height: '54px' }}>
                   <CustomSelect
@@ -226,7 +226,7 @@ const StaffManagement = () => {
               disabled={loading || (formData.role === 'doctor' && !formData.doctorId)}
               style={{ padding: '0.875rem 2rem' }}
             >
-              {loading ? 'Registering...' : 'Register Access Account'}
+              {loading ? 'Creating...' : 'Create Account'}
             </button>
           </div>
         </form>
@@ -237,7 +237,7 @@ const StaffManagement = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
             <UserCheck size={20} style={{ color: 'var(--accent-primary)' }} />
-            Active Access Accounts
+            Active Staff Accounts
           </h2>
           <button
             className="btn"
@@ -300,11 +300,11 @@ const StaffManagement = () => {
                       className="btn"
                       onClick={() => handleDelete(staff._id, staff.email)}
                       disabled={deleteLoadingId === staff._id}
-                      title="Revoke Access"
+                      title="Remove Account"
                       style={{ padding: '0.4rem 0.75rem', color: 'var(--error)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.82rem', border: '1px solid var(--error)', borderRadius: 'var(--radius-md)', opacity: deleteLoadingId === staff._id ? 0.5 : 1 }}
                     >
                       <Trash2 size={14} />
-                      {deleteLoadingId === staff._id ? 'Revoking...' : 'Revoke'}
+                      {deleteLoadingId === staff._id ? 'Removing...' : 'Remove'}
                     </button>
                   </td>
                 </tr>

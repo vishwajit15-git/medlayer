@@ -101,7 +101,7 @@ const PatientList = () => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Users size={28} style={{ color: 'var(--accent-primary)' }} />
-          <h1>Patient Registry</h1>
+          <h1>Patients</h1>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -126,13 +126,13 @@ const PatientList = () => {
 
       <div className="panel" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
         {loading && patients.length === 0 ? (
-          <div className="flex-center" style={{ flex: 1 }}>Loading database...</div>
+          <div className="flex-center" style={{ flex: 1 }}>Loading patients...</div>
         ) : (
           <div style={{ overflowY: 'auto', flex: 1 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 10 }}>
                 <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Global ID</th>
+                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Patient ID</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Full Name</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Age</th>
                   {user?.role !== 'doctor' && (
@@ -173,7 +173,7 @@ const PatientList = () => {
             {patients.length === 0 && (
               <div className="flex-center" style={{ padding: '4rem', flexDirection: 'column', color: 'var(--text-secondary)', gap: '1rem' }}>
                 <ActivitySquare size={40} opacity={0.5} />
-                <p>No query results dynamically matched.</p>
+                <p>No patients found matching your search.</p>
               </div>
             )}
           </div>
@@ -225,23 +225,23 @@ const PatientList = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div className="panel animate-fade-in" style={{ width: '100%', maxWidth: '450px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ marginBottom: '1.5rem' }}>Register Patient</h2>
+            <h2 style={{ marginBottom: '1.5rem' }}>Add New Patient</h2>
             
             {error && <div style={{ background: 'var(--error-bg)', color: 'var(--error)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Patient Canonical Name</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Full Name</label>
                 <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required placeholder="Jane Doe" />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Biological Age</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Age</label>
                 <input type="number" min="0" max="150" value={formData.age} onChange={(e) => setFormData({...formData, age: e.target.value})} required placeholder="34" />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={creating}>{creating ? 'Committing...' : 'Commit Protocol'}</button>
+                <button type="submit" className="btn btn-primary" disabled={creating}>{creating ? 'Adding...' : 'Add Patient'}</button>
               </div>
             </form>
           </div>

@@ -294,7 +294,7 @@ const Appointments = () => {
 
           {(user?.role === 'admin' || user?.role === 'receptionist') && (
             <button className="btn btn-primary" onClick={() => setShowBooking(true)} style={{ width: '200px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
-              <Plus size={18} /> Book Slot
+              <Plus size={18} /> Book Appointment
             </button>
           )}
         </div>
@@ -346,7 +346,7 @@ const Appointments = () => {
                           <button className="btn" style={{ padding: '0.5rem', color: 'var(--reschedule-color)' }} onClick={() => openRescheduleModal(apt)} title="Reschedule">
                             <CalendarClock size={18} />
                           </button>
-                          <button className="btn" style={{ padding: '0.5rem', color: 'var(--error)' }} onClick={() => handleAction(apt._id, 'cancel')} title="Cancel Appt">
+                          <button className="btn" style={{ padding: '0.5rem', color: 'var(--error)' }} onClick={() => handleAction(apt._id, 'cancel')} title="Cancel Appointment">
                             <XCircle size={18} />
                           </button>
                         </>
@@ -354,18 +354,18 @@ const Appointments = () => {
 
                       {apt.status === 'BOOKED' && user?.role === 'doctor' && (
                         <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', fontStyle: 'italic', paddingRight: '0.5rem' }}>
-                          <Clock size={14} /> Awaiting Arrival
+                          <Clock size={14} /> Waiting for check-in
                         </div>
                       )}
 
                       {apt.status === 'CHECKED_IN' && (
-                        <button className="btn" style={{ padding: '0.5rem', color: 'var(--success)' }} onClick={() => handleAction(apt._id, 'complete')} title="Mark Completed">
+                        <button className="btn" style={{ padding: '0.5rem', color: 'var(--success)' }} onClick={() => handleAction(apt._id, 'complete')} title="Complete Visit">
                           <CheckCircle2 size={18} />
                         </button>
                       )}
 
                       {apt.status === 'COMPLETED' && (
-                        <button className="btn" style={{ padding: '0.5rem', color: 'var(--accent-primary)' }} onClick={() => { setSelectedAppt(apt); setNotesText(apt.notes || ''); setShowNotes(true); }} title="Consultation Notes">
+                        <button className="btn" style={{ padding: '0.5rem', color: 'var(--accent-primary)' }} onClick={() => { setSelectedAppt(apt); setNotesText(apt.notes || ''); setShowNotes(true); }} title="Doctor's Notes">
                           <FileText size={18} />
                         </button>
                       )}
@@ -462,7 +462,7 @@ const Appointments = () => {
                       ))}
                     </div>
                   ) : (
-                    <p style={{ color: 'var(--warning)', fontSize: '0.875rem' }}>No available slots on this date.</p>
+                    <p style={{ color: 'var(--warning)', fontSize: '0.875rem' }}>No open slots on this date.</p>
                   )}
                 </div>
               )}
@@ -470,7 +470,7 @@ const Appointments = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowBooking(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={bookingLoading || !bookingData.time}>
-                  {bookingLoading ? 'Reserving...' : 'Book Appointment'}
+                  {bookingLoading ? 'Booking...' : 'Book Appointment'}
                 </button>
               </div>
             </form>
@@ -488,14 +488,14 @@ const Appointments = () => {
         }}>
           <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
             <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FileText style={{ color: 'var(--accent-primary)' }} /> Clinical Notes
+              <FileText style={{ color: 'var(--accent-primary)' }} /> Doctor's Notes
             </h2>
             <form onSubmit={submitNotes} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <textarea
                 rows="5"
                 value={notesText}
                 onChange={(e) => setNotesText(e.target.value)}
-                placeholder="Diagnostic observations and prescription directives..."
+                placeholder="Write consultation notes, diagnosis, or prescription details..."
                 required
               />
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
@@ -517,10 +517,10 @@ const Appointments = () => {
         }}>
           <div onClick={(e) => e.stopPropagation()} className="panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <CalendarClock size={24} style={{ color: 'var(--accent-primary)' }} /> Reschedule
+              <CalendarClock size={24} style={{ color: 'var(--accent-primary)' }} /> Reschedule Appointment
             </h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
-              Rescheduling appointment for <strong>{rescheduleAppt?.patientId?.name || 'Unknown Patient'}</strong> with <strong>Dr. {rescheduleAppt?.doctorId?.name || 'Unknown Doctor'}</strong>.
+              Pick a new date and time for <strong>{rescheduleAppt?.patientId?.name || 'Unknown Patient'}</strong> with <strong>Dr. {rescheduleAppt?.doctorId?.name || 'Unknown Doctor'}</strong>.
             </p>
 
             {rescheduleError && <div style={{ background: 'var(--error-bg)', color: 'var(--error)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{rescheduleError}</div>}
@@ -558,7 +558,7 @@ const Appointments = () => {
                       ))}
                     </div>
                   ) : (
-                    <p style={{ color: 'var(--warning)', fontSize: '0.875rem' }}>No slots available on this date.</p>
+                    <p style={{ color: 'var(--warning)', fontSize: '0.875rem' }}>No open slots on this date.</p>
                   )}
                 </div>
               )}
@@ -566,7 +566,7 @@ const Appointments = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowReschedule(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={rescheduleLoading || !rescheduleData.time}>
-                  {rescheduleLoading ? 'Updating...' : 'Confirm Reschedule'}
+                  {rescheduleLoading ? 'Saving...' : 'Confirm Reschedule'}
                 </button>
               </div>
             </form>

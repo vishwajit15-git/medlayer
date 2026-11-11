@@ -6,43 +6,43 @@ const DEMO_CREDENTIALS = {
   admin: {
     role: 'Admin',
     icon: <ShieldCheck size={20} />,
-    description: 'Full system access — manage clinic settings, staff, doctors, and view audit logs.',
+    description: 'You run the show — set up the clinic, add staff, and keep everything running smoothly.',
     email: 'admin@globalapex.com',
     password: 'Admin@123',
     color: '#31a3dd',
     features: [
-      'Configure clinic hours & working days',
-      'Manage staff accounts & roles',
-      'Create & link doctor profiles',
-      'Access audit logs & system settings',
+      'Set clinic hours & working days',
+      'Add or remove staff members',
+      'Create doctor profiles',
+      'View activity history',
     ],
   },
   receptionist: {
     role: 'Receptionist',
     icon: <Users size={20} />,
-    description: 'Front desk operations — manage patients, book appointments, and handle check-ins.',
+    description: 'The front desk — register patients, schedule visits, and check people in when they arrive.',
     email: 'frontdesk@citadel.com',
     password: '123456789',
     color: '#7db921',
     features: [
-      'Register & search patients (35 patients)',
-      'Book & manage appointments',
-      'Check-in patients on arrival',
-      'View doctor schedules & availability',
+      'Add & look up patients',
+      'Book & reschedule appointments',
+      'Check in patients on arrival',
+      'See which doctors are available',
     ],
   },
   doctor: {
     role: 'Doctor',
     icon: <Stethoscope size={20} />,
-    description: 'Role-based clinical view — see only your own patients and appointments (RBAC enforced).',
+    description: 'Your personal dashboard — you\'ll only see your own patients and appointments, nothing else.',
     email: 'cvelaryon@citadel.com',
     password: '123456789',
     color: '#f39c12',
     features: [
-      'View only your assigned appointments',
-      'Complete consultations & add notes',
-      'Strict role-based access control',
-      'Cannot see other doctors\' patients',
+      'See only your appointments',
+      'Mark visits as complete & add notes',
+      'Private view — other doctors\' data is hidden',
+      'Focused, distraction-free workspace',
     ],
   },
 };
@@ -52,35 +52,35 @@ const WALKTHROUGH_STEPS = [
     id: 'welcome',
     title: 'Welcome to MedLayer',
     subtitle: 'Global Apex Multispeciality Hospital',
-    content: 'This interactive walkthrough will guide you through the login process and help you explore the system using pre-configured demo credentials.',
+    content: 'Let\'s get you started! This quick guide will show you how to log in and explore the app with ready-to-use demo accounts.',
     highlight: null,
   },
   {
     id: 'role-selector',
-    title: 'Choose Your Role',
-    subtitle: 'Three access levels available',
-    content: 'MedLayer uses Role-Based Access Control (RBAC). Select a role tab to see role-specific portal access. Each role sees a different view of the system.',
+    title: 'Pick a Role',
+    subtitle: 'Three ways to explore',
+    content: 'Each person in the clinic sees a different view. Tap a role below to learn what that login can do.',
     highlight: 'role-tabs',
   },
   {
     id: 'credentials',
-    title: 'Demo Credentials',
-    subtitle: 'Quick-fill with one click',
-    content: 'Use the credential cards below to auto-fill the login form. Each role has pre-configured credentials from the Global Apex Multispeciality Hospital demo dataset.',
+    title: 'Try It Out',
+    subtitle: 'One-click login',
+    content: 'Pick a role, then hit the button below to fill in the email & password for you — no typing needed.',
     highlight: 'credential-cards',
   },
   {
     id: 'login-form',
     title: 'Sign In',
-    subtitle: 'Enter your credentials',
-    content: 'The email and password fields accept credentials for any role. The system will automatically detect your role and redirect you to the appropriate dashboard.',
+    subtitle: 'You\'re all set',
+    content: 'Just click "Sign In" once the fields are filled. You\'ll be taken straight to the right dashboard for your role.',
     highlight: 'login-form',
   },
   {
     id: 'demo-tip',
-    title: 'Demo Workflow Tip',
-    subtitle: 'Impress your audience',
-    content: 'Start as the Receptionist to show the patient registry and busy schedule. Then log in as a Doctor to demonstrate strict RBAC — they can only see their own patients.',
+    title: 'Pro Tip for Demos',
+    subtitle: 'The best way to show it off',
+    content: 'Start as the Receptionist to show off the full patient list and busy schedule. Then switch to a Doctor login to see how each doctor only sees their own patients — great for showing privacy & security.',
     highlight: null,
   },
 ];
@@ -163,7 +163,7 @@ const LoginWalkthrough = ({ onFillCredentials, onClose, isVisible }) => {
         title="Show Walkthrough"
       >
         <Activity size={18} />
-        <span>Walkthrough</span>
+        <span>Guide</span>
       </button>
     );
   }
@@ -176,7 +176,7 @@ const LoginWalkthrough = ({ onFillCredentials, onClose, isVisible }) => {
           <div className="wt-header-left">
             <Activity size={22} style={{ color: 'var(--accent-primary)' }} />
             <div>
-              <h3 className="wt-title">MedLayer Walkthrough</h3>
+              <h3 className="wt-title">Quick Start Guide</h3>
               <span className="wt-step-count">
                 Step {currentStep + 1} of {WALKTHROUGH_STEPS.length}
               </span>
@@ -263,11 +263,11 @@ const LoginWalkthrough = ({ onFillCredentials, onClose, isVisible }) => {
                 style={{ background: cred.color }}
               >
                 <ChevronRight size={16} />
-                Auto-fill & Use These Credentials
+                Use This Login
               </button>
 
               <div className="wt-features">
-                <span className="wt-features-label">What you'll see:</span>
+                <span className="wt-features-label">What you'll see inside:</span>
                 <ul>
                   {cred.features.map((f, i) => (
                     <li key={i}>{f}</li>
@@ -298,27 +298,27 @@ const LoginWalkthrough = ({ onFillCredentials, onClose, isVisible }) => {
               <div className="wt-demo-step">
                 <div className="wt-demo-number" style={{ background: '#7db921' }}>1</div>
                 <div>
-                  <strong>Login as Receptionist</strong>
+                  <strong>Sign in as the Receptionist</strong>
                   <p>Samwell Tarly — <code>frontdesk@citadel.com</code></p>
-                  <p className="wt-demo-action">Show 35 patients & busy schedule</p>
+                  <p className="wt-demo-action">Browse all 35 patients & the day's schedule</p>
                 </div>
               </div>
               <div className="wt-demo-arrow">↓</div>
               <div className="wt-demo-step">
                 <div className="wt-demo-number" style={{ background: '#7db921' }}>2</div>
                 <div>
-                  <strong>Check-in Jorah Mormont</strong>
-                  <p>Search and mark as <span style={{ color: '#f39c12' }}>Checked-In</span></p>
+                  <strong>Check in a patient</strong>
+                  <p>Find <strong>Jorah Mormont</strong> and mark him as <span style={{ color: '#f39c12' }}>Checked-In</span></p>
                 </div>
               </div>
               <div className="wt-demo-arrow">↓</div>
               <div className="wt-demo-step">
                 <div className="wt-demo-number" style={{ background: '#f39c12' }}>3</div>
                 <div>
-                  <strong>Login as Dr. Corlys Velaryon</strong>
-                  <p><code>cvelaryon@citadel.com</code></p>
+                  <strong>Switch to a Doctor login</strong>
+                  <p>Dr. Corlys Velaryon — <code>cvelaryon@citadel.com</code></p>
                   <p className="wt-demo-action">
-                    Only sees <strong>Jaime Lannister</strong> (Orthopedics) — RBAC in action!
+                    He only sees <strong>Jaime Lannister</strong> (his patient) — everyone else is hidden!
                   </p>
                 </div>
               </div>
@@ -326,13 +326,13 @@ const LoginWalkthrough = ({ onFillCredentials, onClose, isVisible }) => {
               <div className="wt-demo-step">
                 <div className="wt-demo-number" style={{ background: '#31a3dd' }}>4</div>
                 <div>
-                  <strong>Complete Appointment</strong>
-                  <p>Click Complete on Jaime's visit & add medical notes</p>
+                  <strong>Finish a visit</strong>
+                  <p>Click Complete on Jaime's appointment & add notes</p>
                 </div>
               </div>
 
               <div className="wt-all-doctors">
-                <span className="wt-features-label">All 12 Doctor Logins (password: <code>123456789</code>)</span>
+                <span className="wt-features-label">All 12 doctors — same password: <code>123456789</code></span>
                 <div className="wt-doctor-grid">
                   {[
                     { name: 'Dr. Maester Aemon', email: 'aemon@citadel.com', spec: 'Cardiology' },

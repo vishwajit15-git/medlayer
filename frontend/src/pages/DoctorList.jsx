@@ -92,7 +92,7 @@ const DoctorList = () => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <UserRoundCog size={28} style={{ color: 'var(--accent-primary)' }} />
-          <h1>Doctor Management</h1>
+          <h1>Doctors</h1>
         </div>
         
         {user?.role === 'admin' && (
@@ -103,7 +103,7 @@ const DoctorList = () => {
       </div>
 
       {loading ? (
-        <div className="flex-center" style={{ minHeight: '300px' }}>Loading records...</div>
+        <div className="flex-center" style={{ minHeight: '300px' }}>Loading doctors...</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {doctors.map(doctor => (
@@ -157,7 +157,7 @@ const DoctorList = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div className="panel animate-fade-in" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ marginBottom: '1.5rem' }}>Deploy New Doctor</h2>
+            <h2 style={{ marginBottom: '1.5rem' }}>Add New Doctor</h2>
             
             {error && <div style={{ background: 'var(--error-bg)', color: 'var(--error)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
 

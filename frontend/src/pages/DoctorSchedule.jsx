@@ -166,7 +166,7 @@ const DoctorSchedule = () => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Clock size={28} style={{ color: 'var(--accent-primary)' }} />
-          <h1>Dr. Availability</h1>
+          <h1>Doctor Schedule</h1>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', height: '40px' }}>
@@ -190,7 +190,7 @@ const DoctorSchedule = () => {
           </div>
           {user?.role === 'admin' && (
             <button className="btn btn-primary" onClick={() => setShowOverride(true)} style={{ width: '200px', height: '100%', margin: 0, padding: 0, boxSizing: 'border-box', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', borderRadius: '2rem', fontSize: '0.9rem' }}>
-              <Plus size={18} />Add Holiday / Break
+              <Plus size={18} /> Add Time Off / Break
             </button>
           )}
         </div>
@@ -198,7 +198,7 @@ const DoctorSchedule = () => {
 
       <div className="panel" style={{ flex: 1, overflowY: 'auto' }}>
         {loading ? (
-          <div className="flex-center" style={{ height: '100%' }}>Generating Grid Matrix...</div>
+          <div className="flex-center" style={{ height: '100%' }}>Loading schedule...</div>
         ) : schedule.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
             {schedule.map((slot, i) => {
@@ -221,7 +221,7 @@ const DoctorSchedule = () => {
         ) : (
           <div className="flex-center" style={{ height: '100%', flexDirection: 'column', color: 'var(--text-secondary)' }}>
             <Calendar size={48} opacity={0.3} style={{ marginBottom: '1rem' }} />
-            <p>No canonical shifts assigned or Grid overrides (Holidays) detected.</p>
+            <p>No working shifts or time slots scheduled for this date.</p>
           </div>
         )}
       </div>
@@ -233,10 +233,10 @@ const DoctorSchedule = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Palmtree size={20} color="var(--accent-primary)" />
-            {user?.role === 'admin' ? 'Manage Holidays' : 'Upcoming Holidays'}
+            {user?.role === 'admin' ? 'Manage Time Off & Holidays' : 'Upcoming Time Off & Holidays'}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>{holidays.length} Range(s)</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>{holidays.length} Scheduled</span>
             {showManageHolidays ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </button>
@@ -244,7 +244,7 @@ const DoctorSchedule = () => {
         {showManageHolidays && (
           <div style={{ padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderTop: 'none', borderRadius: '0 0 var(--radius-md) var(--radius-md)', maxHeight: '300px', overflowY: 'auto' }}>
             {holidays.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', margin: '1rem 0' }}>No holidays found for this doctor.</p>
+              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', margin: '1rem 0' }}>No scheduled time off for this doctor.</p>
             ) : (
               <div style={{ display: 'grid', gap: '1rem' }}>
                 {holidays.map((range, idx) => {
@@ -277,7 +277,7 @@ const DoctorSchedule = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div className="panel" style={{ width: '400px', maxWidth: '90vw', padding: '1.5rem', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Delete Holiday</h2>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Remove Time Off</h2>
               <button
                 onClick={() => setDeleteModal({ show: false, range: null, mode: 'ENTIRE' })}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
@@ -288,11 +288,11 @@ const DoctorSchedule = () => {
               <button
                 onClick={() => { setDeleteModal(prev => ({ ...prev, mode: 'ENTIRE' })); setSelectedDaysForDelete([]); }}
                 style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'ENTIRE' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'ENTIRE' ? 'var(--text-on-accent)' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
-              >Entire Range</button>
+              >All Days</button>
               <button
                 onClick={() => setDeleteModal(prev => ({ ...prev, mode: 'PARTIAL' }))}
                 style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: deleteModal.mode === 'PARTIAL' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', color: deleteModal.mode === 'PARTIAL' ? 'var(--text-on-accent)' : 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', transition: 'var(--transition)' }}
-              >Select Days</button>
+              >Pick Specific Days</button>
             </div>
 
             {deleteModal.mode === 'PARTIAL' && (
@@ -353,10 +353,10 @@ const DoctorSchedule = () => {
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--booked-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Clock size={18} style={{ color: 'var(--accent-primary)' }} />
                 </div>
-                <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Manage Availability</h2>
+                <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Add Time Off or Break</h2>
               </div>
               <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', paddingLeft: '2.6rem' }}>
-                {overrideType === 'BREAK' ? 'Block a time range for a doctor break' : 'Mark this day as a holiday for the doctor'}
+                {overrideType === 'BREAK' ? 'Schedule a break during working hours' : 'Mark days off or vacation for this doctor'}
               </p>
             </div>
 
@@ -463,7 +463,7 @@ const DoctorSchedule = () => {
               {/* Action Buttons */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.25rem' }}>
                 <button type="button" onClick={() => setShowOverride(false)} className="btn" style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '0.85rem', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', fontSize: '0.85rem' }}>Apply Changes</button>
+                <button type="submit" className="btn btn-primary" style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', fontSize: '0.85rem' }}>Save</button>
               </div>
             </form>
           </div>

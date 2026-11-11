@@ -58,7 +58,7 @@ const AuditLogs = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Database size={28} style={{ color: 'var(--accent-primary)' }} />
-          <h1>Audit Logs</h1>
+          <h1>Activity Log</h1>
         </div>
 
         <div style={{ width: '200px', height: '40px' }}>
@@ -75,7 +75,7 @@ const AuditLogs = () => {
 
       <div className="panel" style={{ flex: 1, overflowY: 'auto', padding: 0 }}>
         {loading ? (
-          <div className="flex-center" style={{ flex: 1, color: 'var(--text-secondary)' }}>Loading audit logs...</div>
+          <div className="flex-center" style={{ flex: 1, color: 'var(--text-secondary)' }}>Loading activity history...</div>
         ) : error ? (
           <div className="flex-center" style={{ flex: 1, flexDirection: 'column', gap: '1rem', color: 'var(--error)' }}>
             <AlertCircle size={36} />
@@ -87,10 +87,10 @@ const AuditLogs = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
               <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 10 }}>
                 <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Timestamp</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Actor Role</th>
+                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Date & Time</th>
+                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Role</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Action</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Description</th>
+                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,7 +122,7 @@ const AuditLogs = () => {
 
             {filteredLogs.length === 0 && !loading && (
               <div className="flex-center" style={{ padding: '4rem', color: 'var(--text-secondary)' }}>
-                No audit logs found.
+                No activity recorded yet.
               </div>
             )}
           </div>
