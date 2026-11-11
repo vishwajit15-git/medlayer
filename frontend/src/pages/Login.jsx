@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Activity, Eye, EyeOff } from 'lucide-react';
+import { Activity, Eye, EyeOff, HelpCircle } from 'lucide-react';
+import { LoginWalkthrough } from '../walkthrough';
 
 const Login = () => {
   const { login } = useAuth();
@@ -12,6 +13,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [loginRole, setLoginRole] = useState('admin');
+  const [showWalkthrough, setShowWalkthrough] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +27,13 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFillCredentials = (filledEmail, filledPassword, role) => {
+    setEmail(filledEmail);
+    setPassword(filledPassword);
+    setLoginRole(role);
+    setShowWalkthrough(false);
   };
 
   return (
@@ -156,7 +165,40 @@ const Login = () => {
           <span className="text-muted">Don't have a clinic? </span>
           <Link to="/register">Register here</Link>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowWalkthrough(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            width: '100%',
+            marginTop: '1rem',
+            padding: '0.6rem',
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--accent-primary)',
+            fontFamily: "'Source Sans Pro', sans-serif",
+            fontWeight: 600,
+            fontSize: '0.8rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            cursor: 'pointer',
+            transition: 'var(--transition)',
+          }}
+        >
+          <HelpCircle size={16} />
+          Demo Walkthrough & Credentials
+        </button>
       </div>
+
+      <LoginWalkthrough
+        isVisible={showWalkthrough}
+        onClose={() => setShowWalkthrough(false)}
+        onFillCredentials={handleFillCredentials}
+      />
     </div>
   );
 };

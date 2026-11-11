@@ -1,0 +1,642 @@
+/* ═══════════════════════════════════════════════════════════════
+   MedLayer Login Walkthrough — Styles
+   Matches the MedLayer flat/dark design system exactly:
+   - Font: Open Sans (body), Source Sans Pro (headings)
+   - Accent: #31a3dd
+   - Border-radius: 0px (flat UI)
+   - No shadows / no glow
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Overlay ────────────────────────────────────────────────── */
+.wt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  animation: wtFadeIn 0.25s ease-out;
+}
+
+@keyframes wtFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Panel ──────────────────────────────────────────────────── */
+.wt-panel {
+  width: 420px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary, #222222);
+  border: 1px solid var(--border-subtle, #333333);
+  border-radius: 0px;
+  overflow: hidden;
+  animation: wtSlideIn 0.3s ease-out;
+}
+
+@keyframes wtSlideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.wt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle, #333333);
+  background: var(--bg-tertiary, #2a2a2a);
+}
+
+.wt-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.wt-title {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #f0f2f5);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.wt-step-count {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #aaaaaa);
+}
+
+.wt-header-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.wt-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #aaaaaa);
+  cursor: pointer;
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.wt-icon-btn:hover {
+  color: var(--text-primary, #f0f2f5);
+}
+
+/* ─── Progress Bar ───────────────────────────────────────────── */
+.wt-progress-track {
+  height: 3px;
+  background: var(--bg-tertiary, #2a2a2a);
+}
+
+.wt-progress-fill {
+  height: 100%;
+  background: var(--accent-primary, #31a3dd);
+  transition: width 0.35s ease;
+}
+
+/* ─── Body ───────────────────────────────────────────────────── */
+.wt-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wt-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.wt-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wt-body::-webkit-scrollbar-thumb {
+  background: var(--border-subtle, #333333);
+}
+
+.wt-step-header {
+  margin-bottom: 0.25rem;
+}
+
+.wt-step-title {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary, #f0f2f5);
+  margin: 0 0 0.25rem;
+}
+
+.wt-step-subtitle {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.8rem;
+  color: var(--accent-primary, #31a3dd);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wt-step-content {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #aaaaaa);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── Role Selector Tabs ─────────────────────────────────────── */
+.wt-role-selector {
+  display: flex;
+  background: var(--bg-tertiary, #2a2a2a);
+  padding: 0.25rem;
+  border-radius: 0px;
+  gap: 0;
+}
+
+.wt-role-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #aaaaaa);
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 0px;
+}
+
+.wt-role-tab.active {
+  background: var(--bg-secondary, #222222);
+  color: var(--tab-color, var(--text-primary));
+}
+
+.wt-role-tab:hover:not(.active) {
+  background: var(--hover-overlay, rgba(255, 255, 255, 0.05));
+}
+
+/* ─── Credential Card ────────────────────────────────────────── */
+.wt-credential-card {
+  border: 1px solid var(--border-subtle, #333333);
+  border-top: 3px solid var(--card-accent, var(--accent-primary));
+  background: var(--bg-tertiary, #2a2a2a);
+  padding: 1rem;
+  border-radius: 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.wt-cred-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.wt-cred-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.wt-cred-role {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text-primary, #f0f2f5);
+  display: block;
+}
+
+.wt-cred-desc {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #aaaaaa);
+  margin: 0.2rem 0 0;
+  line-height: 1.5;
+}
+
+.wt-cred-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wt-cred-field label {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #aaaaaa);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.wt-cred-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-primary, #1a1a1a);
+  border: 1px solid var(--border-subtle, #333333);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0px;
+}
+
+.wt-cred-value code {
+  flex: 1;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-primary, #f0f2f5);
+  letter-spacing: 0.3px;
+}
+
+.wt-copy-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #aaaaaa);
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.wt-copy-btn:hover {
+  color: var(--accent-primary, #31a3dd);
+}
+
+/* ─── Auto-fill Button ───────────────────────────────────────── */
+.wt-fill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 0px;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.wt-fill-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* ─── Features List ──────────────────────────────────────────── */
+.wt-features {
+  border-top: 1px solid var(--border-subtle, #333333);
+  padding-top: 0.75rem;
+}
+
+.wt-features-label {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #aaaaaa);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.wt-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.wt-features li {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #aaaaaa);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.wt-features li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--card-accent, var(--accent-primary));
+  font-size: 0.75rem;
+}
+
+/* ─── Welcome Grid ───────────────────────────────────────────── */
+.wt-welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.wt-welcome-card {
+  background: var(--bg-tertiary, #2a2a2a);
+  border: 1px solid var(--border-subtle, #333333);
+  border-top: 2px solid var(--card-accent, var(--accent-primary));
+  padding: 1rem 0.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0px;
+}
+
+.wt-welcome-icon {
+  margin-bottom: 0.25rem;
+}
+
+.wt-welcome-card strong {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-primary, #f0f2f5);
+}
+
+.wt-welcome-email {
+  font-family: 'Consolas', monospace;
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #888888);
+  word-break: break-all;
+}
+
+/* ─── Demo Flow ──────────────────────────────────────────────── */
+.wt-demo-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wt-demo-step {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: var(--bg-tertiary, #2a2a2a);
+  border: 1px solid var(--border-subtle, #333333);
+  border-radius: 0px;
+}
+
+.wt-demo-number {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 0px;
+}
+
+.wt-demo-step strong {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-primary, #f0f2f5);
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.wt-demo-step p {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #aaaaaa);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.wt-demo-step code {
+  font-family: 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: var(--accent-primary, #31a3dd);
+}
+
+.wt-demo-action {
+  margin-top: 0.2rem !important;
+  color: var(--text-tertiary, #888888) !important;
+  font-style: italic;
+}
+
+.wt-demo-arrow {
+  text-align: center;
+  color: var(--text-tertiary, #888888);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* ─── All Doctors Grid ───────────────────────────────────────── */
+.wt-all-doctors {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle, #333333);
+  padding-top: 0.75rem;
+}
+
+.wt-doctor-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.wt-doctor-grid::-webkit-scrollbar {
+  width: 3px;
+}
+
+.wt-doctor-grid::-webkit-scrollbar-thumb {
+  background: var(--border-subtle, #333333);
+}
+
+.wt-doctor-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  background: var(--bg-primary, #1a1a1a);
+  border: 1px solid var(--border-subtle, #333333);
+  border-radius: 0px;
+  font-size: 0.75rem;
+}
+
+.wt-doctor-name {
+  font-family: 'Open Sans', sans-serif;
+  color: var(--text-primary, #f0f2f5);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wt-doctor-spec {
+  font-family: 'Open Sans', sans-serif;
+  color: var(--text-tertiary, #888888);
+  font-size: 0.7rem;
+}
+
+.wt-doctor-email {
+  font-family: 'Consolas', monospace;
+  color: var(--accent-primary, #31a3dd);
+  font-size: 0.7rem;
+}
+
+/* ─── Footer Navigation ─────────────────────────────────────── */
+.wt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border-subtle, #333333);
+  background: var(--bg-tertiary, #2a2a2a);
+}
+
+.wt-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-subtle, #333333);
+  background: transparent;
+  color: var(--text-secondary, #aaaaaa);
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 0px;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wt-nav-btn:hover:not(:disabled) {
+  background: var(--accent-primary, #31a3dd);
+  border-color: var(--accent-primary, #31a3dd);
+  color: #fff;
+}
+
+.wt-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.wt-nav-next {
+  background: var(--accent-primary, #31a3dd);
+  border-color: var(--accent-primary, #31a3dd);
+  color: #fff;
+}
+
+.wt-nav-next:hover:not(:disabled) {
+  background: var(--accent-hover, #2689be);
+  border-color: var(--accent-hover, #2689be);
+}
+
+/* ─── Dots ───────────────────────────────────────────────────── */
+.wt-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.wt-dot {
+  width: 8px;
+  height: 8px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: var(--border-subtle, #333333);
+  border-radius: 0px;
+  transition: all 0.2s;
+}
+
+.wt-dot.active {
+  background: var(--accent-primary, #31a3dd);
+  width: 20px;
+}
+
+.wt-dot.done {
+  background: var(--text-tertiary, #888888);
+}
+
+/* ─── Minimized Button ───────────────────────────────────────── */
+.wt-minimized-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--accent-primary, #31a3dd);
+  border: none;
+  color: #fff;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border-radius: 0px;
+  transition: background 0.2s;
+  animation: wtFadeIn 0.2s ease-out;
+}
+
+.wt-minimized-btn:hover {
+  background: var(--accent-hover, #2689be);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .wt-overlay {
+    padding: 0;
+    justify-content: center;
+  }
+
+  .wt-panel {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+  }
+
+  .wt-welcome-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wt-doctor-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .wt-doctor-spec,
+  .wt-doctor-email {
+    display: none;
+  }
+}
+
